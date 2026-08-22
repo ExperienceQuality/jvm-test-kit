@@ -12,19 +12,11 @@ public final class Xq {
     private Xq() {
     }
 
-    public static RestApi rest(String name, RestApiConfig config) {
-        return XqContextHolder.current().rest(requireName(name), Objects.requireNonNull(config, "config"));
+    public static RestApi rest(RestApiConfig config) {
+        return XqContextHolder.current().rest(Objects.requireNonNull(config, "config"));
     }
 
-    public static RestApi rest(String name) {
-        return XqContextHolder.current().rest(requireName(name));
-    }
-
-    private static String requireName(String name) {
-        Objects.requireNonNull(name, "name");
-        if (name.isBlank()) {
-            throw new IllegalArgumentException("XQ helper name must not be blank");
-        }
-        return name;
+    public static RestApi rest() {
+        return XqContextHolder.current().rest();
     }
 }

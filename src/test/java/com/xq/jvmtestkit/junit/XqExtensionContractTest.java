@@ -59,20 +59,20 @@ class XqExtensionContractTest {
         SummaryGeneratingListener listener = execute(selectClass(SuccessfulConsumer.class));
 
         assertEquals(0, listener.getSummary().getFailures().size());
-        assertEquals(2, TestProbe.restApis.size());
-        TestProbe.restApis.forEach(XqExtensionContractTest::assertClosed);
+        assertEquals(2, TestProbe.restApiInstances.size());
+        TestProbe.restApiInstances.forEach(XqExtensionContractTest::assertClosed);
     }
 
     @Test
     void givesParameterizedAndPerClassInvocationsFreshContexts() {
         SummaryGeneratingListener parameterized = execute(selectClass(ParameterizedConsumer.class));
         assertEquals(0, parameterized.getSummary().getFailures().size());
-        assertEquals(2, TestProbe.restApis.size());
+        assertEquals(2, TestProbe.restApiInstances.size());
 
         TestProbe.reset(TestProbe.config);
         SummaryGeneratingListener perClass = execute(selectClass(PerClassConsumer.class));
         assertEquals(0, perClass.getSummary().getFailures().size());
-        assertEquals(2, TestProbe.restApis.size());
+        assertEquals(2, TestProbe.restApiInstances.size());
     }
 
     @Test
@@ -89,11 +89,14 @@ class XqExtensionContractTest {
     }
 
     @Test
-    void rejectsConflictingNamedConfigurationAndMissingOrInactiveAccess() {
-        SummaryGeneratingListener listener = execute(selectClass(ConfigurationConsumer.class));
+    void rejectsConflictingConfigurationAndUnconfiguredOrInactiveAccess() {
+        SummaryGeneratingListener listener = execute(
+                selectClass(ConfigurationConsumer.class),
+                selectClass(UnconfiguredConsumer.class)
+        );
         assertEquals(0, listener.getSummary().getFailures().size());
 
-        IllegalStateException inactive = assertThrows(IllegalStateException.class, () -> Xq.rest("orders"));
+        IllegalStateException inactive = assertThrows(IllegalStateException.class, Xq::rest);
         assertTrue(inactive.getMessage().contains("@XqTest"));
     }
 
@@ -113,7 +116,7 @@ class XqExtensionContractTest {
         );
 
         assertEquals(0, listener.getSummary().getFailures().size());
-        assertEquals(2, TestProbe.restApis.size());
+        assertEquals(2, TestProbe.restApiInstances.size());
     }
 
     private static SummaryGeneratingListener execute(DiscoverySelector... selectors) {
@@ -158,24 +161,24 @@ class XqExtensionContractTest {
 
         @BeforeEach
         void configureRestApi() {
-            hookApi = Xq.rest("orders", TestProbe.config);
-            TestProbe.restApis.add(hookApi);
+            hookApi = Xq.rest(TestProbe.config);
+            TestProbe.restApiInstances.add(hookApi);
         }
 
         @Test
         void usesSameRestApiAndRealHttpTransport() {
-            assertSame(hookApi, Xq.rest("orders"));
-            Xq.rest("orders").get("/health").should();
+            assertSame(hookApi, Xq.rest());
+            Xq.rest().get("/health").should();
         }
 
         @Test
         void createsAFreshHelperForAnotherInvocation() {
-            assertSame(hookApi, Xq.rest("orders"));
+            assertSame(hookApi, Xq.rest());
         }
 
         @AfterEach
         void remainsAvailableDuringUserTeardown() {
-            assertSame(hookApi, Xq.rest("orders"));
+            assertSame(hookApi, Xq.rest());
         }
     }
 
@@ -185,8 +188,8 @@ class XqExtensionContractTest {
 
         @BeforeEach
         void configure() {
-            RestApi current = Xq.rest("orders", TestProbe.config);
-            TestProbe.restApis.add(current);
+            RestApi current = Xq.rest(TestProbe.config);
+            TestProbe.restApiInstances.add(current);
             if (previous != null) {
                 assertNotSame(previous, current);
             }
@@ -207,8 +210,8 @@ class XqExtensionContractTest {
 
         @BeforeEach
         void configure() {
-            RestApi current = Xq.rest("orders", TestProbe.config);
-            TestProbe.restApis.add(current);
+            RestApi current = Xq.rest(TestProbe.config);
+            TestProbe.restApiInstances.add(current);
             if (previous != null) {
                 assertNotSame(previous, current);
             }
@@ -217,12 +220,12 @@ class XqExtensionContractTest {
 
         @Test
         void first() {
-            assertSame(previous, Xq.rest("orders"));
+            assertSame(previous, Xq.rest());
         }
 
         @Test
         void second() {
-            assertSame(previous, Xq.rest("orders"));
+            assertSame(previous, Xq.rest());
         }
     }
 
@@ -230,7 +233,7 @@ class XqExtensionContractTest {
     static class FailingConsumer {
         @BeforeEach
         void configure() {
-            TestProbe.lastApi = Xq.rest("orders", TestProbe.config);
+            TestProbe.lastApi = Xq.rest(TestProbe.config);
         }
 
         @Test
@@ -243,7 +246,7 @@ class XqExtensionContractTest {
     static class FailingHookConsumer {
         @BeforeEach
         void configureThenFail() {
-            TestProbe.lastApi = Xq.rest("orders", TestProbe.config);
+            TestProbe.lastApi = Xq.rest(TestProbe.config);
             fail("expected hook failure");
         }
 
@@ -256,17 +259,25 @@ class XqExtensionContractTest {
     @XqTest
     static class ConfigurationConsumer {
         @Test
-        void enforcesNamedConfigurationRules() {
-            RestApi configured = Xq.rest("orders", TestProbe.config);
-            assertSame(configured, Xq.rest("orders", TestProbe.config));
+        void enforcesSingleApiConfigurationRules() {
+            RestApi configured = Xq.rest(TestProbe.config);
+            assertSame(configured, Xq.rest(TestProbe.config));
 
             RestApiConfig conflict = RestApiConfig.at(URI.create("https://example.test/"));
             IllegalStateException failure = assertThrows(
                     IllegalStateException.class,
-                    () -> Xq.rest("orders", conflict)
+                    () -> Xq.rest(conflict)
             );
             assertTrue(failure.getMessage().contains("already configured differently"));
-            assertThrows(IllegalStateException.class, () -> Xq.rest("missing"));
+        }
+    }
+
+    @XqTest
+    static class UnconfiguredConsumer {
+        @Test
+        void requiresConfigurationBeforeAccess() {
+            IllegalStateException failure = assertThrows(IllegalStateException.class, Xq::rest);
+            assertTrue(failure.getMessage().contains("Xq.rest(config)"));
         }
     }
 
@@ -274,7 +285,7 @@ class XqExtensionContractTest {
     static class WorkerThreadConsumer {
         @BeforeEach
         void configure() {
-            TestProbe.lastApi = Xq.rest("orders", TestProbe.config);
+            TestProbe.lastApi = Xq.rest(TestProbe.config);
         }
 
         @Test
@@ -282,7 +293,7 @@ class XqExtensionContractTest {
             try (var executor = Executors.newSingleThreadExecutor()) {
                 Throwable failure = executor.submit(() -> {
                     try {
-                        Xq.rest("orders");
+                        Xq.rest();
                         return null;
                     } catch (Throwable throwable) {
                         return throwable;
@@ -290,7 +301,7 @@ class XqExtensionContractTest {
                 }).get(5, TimeUnit.SECONDS);
 
                 assertInstanceOf(IllegalStateException.class, failure);
-                assertSame(TestProbe.lastApi, Xq.rest("orders"));
+                assertSame(TestProbe.lastApi, Xq.rest());
             }
         }
     }
@@ -306,15 +317,15 @@ class XqExtensionContractTest {
     abstract static class ParallelConsumer {
         @Test
         void overlapsWithoutSharingContext() throws InterruptedException {
-            RestApi api = Xq.rest("orders", TestProbe.config);
-            TestProbe.restApis.add(api);
+            RestApi api = Xq.rest(TestProbe.config);
+            TestProbe.restApiInstances.add(api);
             TestProbe.parallelReady.countDown();
             assertTrue(TestProbe.parallelReady.await(5, TimeUnit.SECONDS), "parallel classes did not overlap");
         }
     }
 
     private static final class TestProbe {
-        private static final Set<RestApi> restApis = ConcurrentHashMap.newKeySet();
+        private static final Set<RestApi> restApiInstances = ConcurrentHashMap.newKeySet();
         private static volatile RestApiConfig config;
         private static volatile RestApi lastApi;
         private static volatile CountDownLatch parallelReady = new CountDownLatch(0);
@@ -323,7 +334,7 @@ class XqExtensionContractTest {
         }
 
         static void reset(RestApiConfig nextConfig) {
-            restApis.clear();
+            restApiInstances.clear();
             config = nextConfig;
             lastApi = null;
             parallelReady = new CountDownLatch(0);

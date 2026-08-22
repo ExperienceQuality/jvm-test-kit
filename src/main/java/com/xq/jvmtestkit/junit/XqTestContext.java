@@ -4,43 +4,37 @@ import com.xq.jvmtestkit.contract.RestApi;
 import com.xq.jvmtestkit.contract.RestApiConfig;
 import com.xq.jvmtestkit.impl.RestApiService;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 final class XqTestContext implements AutoCloseable {
-    private final Map<String, NamedRestApi> restApis = new LinkedHashMap<>();
     private final AtomicBoolean closed = new AtomicBoolean();
+    private RestApiConfig restConfig;
+    private RestApiService restApi;
 
-    RestApi rest(String name, RestApiConfig config) {
+    RestApi rest(RestApiConfig config) {
         ensureOpen();
-        NamedRestApi existing = restApis.get(name);
-        if (existing != null) {
-            if (!existing.config().equals(config)) {
+        if (restApi != null) {
+            if (!restConfig.equals(config)) {
                 throw new IllegalStateException(
-                        "REST helper '" + name + "' is already configured differently in this XQ test invocation"
+                        "The REST API is already configured differently in this XQ test invocation"
                 );
             }
-            return existing.service();
+            return restApi;
         }
 
-        RestApiService service = new RestApiService(config);
-        restApis.put(name, new NamedRestApi(config, service));
-        return service;
+        restConfig = config;
+        restApi = new RestApiService(config);
+        return restApi;
     }
 
-    RestApi rest(String name) {
+    RestApi rest() {
         ensureOpen();
-        NamedRestApi existing = restApis.get(name);
-        if (existing == null) {
+        if (restApi == null) {
             throw new IllegalStateException(
-                    "No REST helper named '" + name + "' is configured; "
-                            + "call Xq.rest(\"" + name + "\", config) from an @BeforeEach hook first"
+                    "No REST API is configured; call Xq.rest(config) from an @BeforeEach hook first"
             );
         }
-        return existing.service();
+        return restApi;
     }
 
     @Override
@@ -48,19 +42,16 @@ final class XqTestContext implements AutoCloseable {
         if (!closed.compareAndSet(false, true)) {
             return;
         }
-        List<NamedRestApi> resources = new ArrayList<>(restApis.values());
-        for (int index = resources.size() - 1; index >= 0; index--) {
-            resources.get(index).service().close();
+        if (restApi != null) {
+            restApi.close();
         }
-        restApis.clear();
+        restApi = null;
+        restConfig = null;
     }
 
     private void ensureOpen() {
         if (closed.get()) {
             throw new IllegalStateException("XQ test context is closed");
         }
-    }
-
-    private record NamedRestApi(RestApiConfig config, RestApiService service) {
     }
 }
