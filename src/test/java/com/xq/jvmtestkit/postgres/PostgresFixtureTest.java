@@ -8,15 +8,19 @@ import java.sql.ResultSet;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class PostgresFixtureTest {
     @Test
     void defaultsUseDigestPinnedImage() {
         PostgresFixtureConfig config = PostgresFixtureConfig.defaults();
+        PostgresFixtureConfig anotherConfig = PostgresFixtureConfig.defaults();
         assertTrue(config.imageName().contains("@sha256:"));
         assertEquals(PostgresFixtureConfig.APPROVED_POSTGRES_16_DIGEST,
                 config.imageName().substring(config.imageName().indexOf('@') + 1));
-        assertFalse(config.sanitizedDiagnostics().contains("jvmtestkit-secret"));
+        assertNotEquals(config.username(), anotherConfig.username());
+        assertNotEquals(config.password(), anotherConfig.password());
+        assertFalse(config.sanitizedDiagnostics().contains(config.password()));
     }
 
     @Test

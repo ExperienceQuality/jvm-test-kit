@@ -1,6 +1,7 @@
 package com.xq.jvmtestkit.postgres;
 
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Immutable configuration for a disposable PostgreSQL fixture.
@@ -54,9 +55,9 @@ public final class PostgresFixtureConfig {
 
     public static final class Builder {
         private String imageName = "postgres@" + APPROVED_POSTGRES_16_DIGEST;
-        private String databaseName = "jvmtestkit";
-        private String username = "jvmtestkit";
-        private String password = "jvmtestkit-secret";
+        private String databaseName = generatedCredential("jvmtestkit_db_");
+        private String username = generatedCredential("jvmtestkit_user_");
+        private String password = generatedCredential("jvmtestkit_pw_");
 
         private Builder() {
         }
@@ -97,6 +98,10 @@ public final class PostgresFixtureConfig {
                 throw new IllegalArgumentException(name + " must not be blank");
             }
             return value;
+        }
+
+        private static String generatedCredential(String prefix) {
+            return prefix + UUID.randomUUID().toString().replace("-", "");
         }
     }
 }
