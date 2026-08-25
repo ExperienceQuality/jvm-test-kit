@@ -1,0 +1,57 @@
+name: Verify
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - run: chmod +x ./gradlew
+      - name: Run verification
+        run: ./gradlew --no-daemon clean check -PreleaseVersion=1.0.0
+      - name: Report API compatibility baseline status
+        run: |
+          if [[ -n "${JAPICMP_BASELINE:-}" ]]; then
+            ./gradlew --no-daemon japicmp -PjapicmpBaseline="$JAPICMP_BASELINE"
+          else
+            echo 'No japicmp baseline configured; first-release compatibility gate is visible and skipped.'
+          fi
+      - name: Publish verification artifact to isolated Maven repository
+        env:
+          LOCAL_M2: ${{ runner.temp }}/xq-m2
+        run: |
+          mkdir -p "$LOCAL_M2"
+          ./gradlew --no-daemon publishMavenJavaPublicationToMavenLocal -PreleaseVersion=1.0.0 -Dmaven.repo.local="$LOCAL_M2"
+      - name: Resolve clean consumer
+        env:
+          LOCAL_M2: ${{ runner.temp }}/xq-m2
+        run: ./gradlew --no-daemon -p fixtures/clean-consumer clean check -PkitVersion=1.0.0 -Dmaven.repo.local="$LOCAL_M2"
+      - name: Generate SBOM
+        run: ./gradlew --no-daemon cyclonedxBom -PreleaseVersion=1.0.0
+      - name: Sanitize JUnit reports
+        if: always()
+        run: python3 ci/sanitize_junit.py build/test-results .ci-evidence/test-results
+      - name: Upload sanitized evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-evidence-${{ github.run_id }}
+          path: |
+            .ci-evidence/test-results
+            fixtures/clean-consumer/build/test-results
+            build/reports
+          if-no-files-found: error
+          retention-days: 14
