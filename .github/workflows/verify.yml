@@ -21,7 +21,7 @@ jobs:
           cache: gradle
       - run: chmod +x ./gradlew
       - name: Run verification
-        run: ./gradlew --no-daemon clean check -x japicmp -PreleaseVersion=1.0.0
+        run: ./gradlew --no-daemon clean check -PreleaseVersion=1.0.0
       - name: Report API compatibility baseline status
         run: |
           if [[ -n "${JAPICMP_BASELINE:-}" ]]; then

@@ -58,7 +58,7 @@ jobs:
       - name: Run verification and compatibility checks
         env:
           VERSION: ${{ steps.version.outputs.version }}
-        run: ./gradlew --no-daemon clean check cyclonedxBom -x japicmp -PreleaseVersion="$VERSION"
+        run: ./gradlew --no-daemon clean check cyclonedxBom -PreleaseVersion="$VERSION"
       - name: Run API compatibility when baseline exists
         run: |
           if [[ -n "${JAPICMP_BASELINE:-}" ]]; then

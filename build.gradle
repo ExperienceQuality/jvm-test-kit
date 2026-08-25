@@ -91,9 +91,15 @@ tasks.register('japicmp', me.champeau.gradle.japicmp.JapicmpTask) {
     reportOnlySummary = true
     ignoreMissingClasses = true
     newArchives.from(tasks.named('jar'))
-    def baseline = providers.gradleProperty('japicmpBaseline')
-    oldArchives.from(baseline.map { file(it) })
-    onlyIf { baseline.isPresent() }
+}
+
+def japicmpBaseline = providers.gradleProperty('japicmpBaseline').orNull
+tasks.named('japicmp') {
+    if (japicmpBaseline == null || japicmpBaseline.isBlank()) {
+        enabled = false
+    } else {
+        oldArchives.from(file(japicmpBaseline))
+    }
 }
 
 tasks.named('check') {
