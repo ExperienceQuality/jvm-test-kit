@@ -36,6 +36,14 @@ public final class ServiceHttpRequest {
         return builder("POST", pathAndQuery);
     }
 
+    public static Builder put(String pathAndQuery) {
+        return builder("PUT", pathAndQuery);
+    }
+
+    public static Builder delete(String pathAndQuery) {
+        return builder("DELETE", pathAndQuery);
+    }
+
     public String method() {
         return method;
     }

@@ -36,8 +36,9 @@ repositories {
 
 dependencies {
     implementation 'io.swagger.parser.v3:swagger-parser:2.1.37'
-    implementation 'org.testcontainers:postgresql:1.20.6'
+    implementation 'org.testcontainers:testcontainers-postgresql:2.0.5'
     implementation 'org.postgresql:postgresql:42.7.13'
+    implementation 'io.github.java-diff-utils:java-diff-utils:4.17'
 
     api platform('org.junit:junit-bom:6.0.0')
     api 'org.junit.jupiter:junit-jupiter-api'

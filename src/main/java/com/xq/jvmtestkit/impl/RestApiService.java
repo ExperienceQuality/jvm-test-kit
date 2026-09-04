@@ -32,6 +32,16 @@ public final class RestApiService implements RestApi, AutoCloseable {
     }
 
     @Override
+    public RestApi put(String path) {
+        return execute(ServiceHttpRequest.put(path).build());
+    }
+
+    @Override
+    public RestApi delete(String path) {
+        return execute(ServiceHttpRequest.delete(path).build());
+    }
+
+    @Override
     public RestMatcher should() {
         ensureOpen();
         if (matcher == null) {
