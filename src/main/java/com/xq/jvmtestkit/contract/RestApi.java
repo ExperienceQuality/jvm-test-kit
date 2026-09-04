@@ -5,10 +5,16 @@ public interface RestApi {
 
     RestApi post(String path);
 
+    RestApi put(String path);
+
+    RestApi delete(String path);
+
     RestMatcher should();
 
 
     interface RestMatcher {
+        RestMatcher status(int expectedStatus);
+
         RestMatcher equalToJson(String json);
 
         RestMatcher equalToJson(Object json);
@@ -20,4 +26,3 @@ public interface RestApi {
         RestMatcher match(Object json);
     }
 }
-
