@@ -43,9 +43,13 @@ Implemented assertions:
 - `status(int)` checks exact status code.
 - `equalToJson(String)` compares parsed JSON trees, ignoring object key order
   while preserving array order. Failures include a friendly unified diff.
+- `equalToJson(Object)` serializes the expected value as JSON, then applies the
+  same strict comparison.
+- `match(String)` and `match(Object)` perform lenient structural matching:
+  expected object fields and array elements must exist, object key order and
+  array order are ignored, and extra actual fields/elements are allowed.
 
-Declared matcher methods `equalToJson(Object)`, `equalToJsonSchema(String)`,
-`match(String)`, and `match(Object)` are reserved for future implementation.
+`equalToJsonSchema(String)` remains reserved for future implementation.
 
 ## Bounded HTTP client
 

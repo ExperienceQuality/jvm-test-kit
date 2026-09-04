@@ -76,6 +76,41 @@ class RestApiFluentTest {
         }
     }
 
+    @Test
+    void matchIgnoresArrayOrderAndAllowsActualExtras() throws Exception {
+        server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/users", exchange -> {
+            byte[] body = "{\"users\":[{\"id\":2},{\"id\":1}],\"trace\":\"ignored\"}".getBytes();
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+        server.start();
+
+        try (RestApiService service = new RestApiService(RestApiConfig.at(baseUri()))) {
+            RestApi api = service;
+            api.get("/users").should().match("{\"users\":[{\"id\":1},{\"id\":2}]}").status(200);
+        }
+    }
+
+    @Test
+    void matchFailsWhenExpectedArrayElementIsMissing() throws Exception {
+        server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/users", exchange -> {
+            byte[] body = "{\"users\":[{\"id\":1}]}".getBytes();
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+        server.start();
+
+        try (RestApiService service = new RestApiService(RestApiConfig.at(baseUri()))) {
+            RestApi api = service;
+            assertThrows(AssertionError.class,
+                    () -> api.get("/users").should().match("{\"users\":[{\"id\":1},{\"id\":2}]}").status(200));
+        }
+    }
+
     private URI baseUri() {
         return URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/");
     }

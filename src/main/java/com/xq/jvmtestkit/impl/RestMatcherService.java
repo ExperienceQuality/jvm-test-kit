@@ -45,7 +45,7 @@ public final class RestMatcherService implements RestApi.RestMatcher {
 
     @Override
     public RestApi.RestMatcher equalToJson(Object json) {
-        return null;
+        return equalToJson(serialize(json));
     }
 
     @Override
@@ -55,12 +55,23 @@ public final class RestMatcherService implements RestApi.RestMatcher {
 
     @Override
     public RestApi.RestMatcher match(String json) {
-        return null;
+        Objects.requireNonNull(json, "json");
+        try {
+            JsonNode expected = JSON.readTree(json);
+            JsonNode actual = JSON.readTree(restResponse.body());
+            if (!matches(expected, actual)) {
+                throw new AssertionError(JsonDiffFormatter.format(pretty(expected), pretty(actual))
+                        + "\n" + sanitizedDiagnostics());
+            }
+            return this;
+        } catch (IOException exception) {
+            throw new AssertionError("REST JSON match received invalid JSON", exception);
+        }
     }
 
     @Override
     public RestApi.RestMatcher match(Object json) {
-        return null;
+        return match(serialize(json));
     }
 
     private String sanitizedDiagnostics() {
@@ -73,5 +84,54 @@ public final class RestMatcherService implements RestApi.RestMatcher {
         } catch (IOException exception) {
             throw new AssertionError("REST JSON assertion could not format JSON", exception);
         }
+    }
+
+    private static String serialize(Object value) {
+        Objects.requireNonNull(value, "json");
+        try {
+            return JSON.writeValueAsString(value);
+        } catch (IOException exception) {
+            throw new AssertionError("REST JSON assertion could not serialize expected value", exception);
+        }
+    }
+
+    private static boolean matches(JsonNode expected, JsonNode actual) {
+        if (expected == null || actual == null) {
+            return expected == actual;
+        }
+        if (expected.isObject()) {
+            if (!actual.isObject()) {
+                return false;
+            }
+            var fields = expected.fields();
+            while (fields.hasNext()) {
+                var field = fields.next();
+                if (!actual.has(field.getKey()) || !matches(field.getValue(), actual.get(field.getKey()))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        if (expected.isArray()) {
+            if (!actual.isArray() || expected.size() > actual.size()) {
+                return false;
+            }
+            boolean[] used = new boolean[actual.size()];
+            for (JsonNode expectedElement : expected) {
+                boolean found = false;
+                for (int index = 0; index < actual.size(); index++) {
+                    if (!used[index] && matches(expectedElement, actual.get(index))) {
+                        used[index] = true;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return expected.equals(actual);
     }
 }
