@@ -8,7 +8,7 @@ plugins {
 group = 'com.xq'
 def kitVersion = providers.gradleProperty('releaseVersion')
         .orElse(providers.environmentVariable('RELEASE_VERSION'))
-        .orElse('1.0-SNAPSHOT')
+        .orElse('0.1.0')
 version = kitVersion.get()
 
 def semver = ~/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?/
