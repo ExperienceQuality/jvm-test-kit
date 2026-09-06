@@ -1,13 +1,11 @@
 package com.xq.jvmtestkit.junit;
 
-import com.xq.jvmtestkit.contract.RestApi;
-import com.xq.jvmtestkit.contract.RestApiConfig;
+import com.xq.jvmtestkit.rest.RestApi;
+import com.xq.jvmtestkit.rest.RestApiConfig;
 
 import java.util.Objects;
 
-/**
- * Static author-facing facade for helpers owned by the current XQ test invocation.
- */
+/** Entry point for helpers owned by the current {@link XqTest} invocation. */
 public final class Xq {
     private Xq() {
     }
