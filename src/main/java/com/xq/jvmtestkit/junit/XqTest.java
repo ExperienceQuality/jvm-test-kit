@@ -9,9 +9,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Activates the XQ runtime for every test invocation in the annotated class.
- */
+/** Activates a fresh XQ context for every test invocation. */
 @Documented
 @Inherited
 @Target(ElementType.TYPE)

@@ -7,7 +7,7 @@ repositories {
     mavenCentral()
 }
 
-def kitVersion = providers.gradleProperty('kitVersion').orElse('0.1.0').get()
+def kitVersion = providers.gradleProperty('kitVersion').orElse('2.0.0').get()
 
 dependencies {
     testImplementation "com.xq:jvm-test-kit:${kitVersion}"
