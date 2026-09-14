@@ -9,6 +9,21 @@ calls, request setup, immutable responses, and JSON/status assertions. It is
 intended for black-box service tests where the service is already running in
 the test process, a test container, or a local integration environment.
 
+## Template Use
+
+This repository is also a template for new XQ JVM test-kit libraries. After
+creating a repository from the template, update:
+
+- `settings.gradle` with the new root project name.
+- `build.gradle` with the new Maven `group`, package coordinates, POM name,
+  description, URL, and SCM links.
+- Java package names under `src/main/java` and `src/test/java` when the new kit
+  should not publish `com.xq.jvmtestkit`.
+- This README title, badge URLs, install coordinates, examples, and API
+  descriptions so they describe the generated repository.
+- `.github/workflows/*` release and verification commands if the new kit needs
+  different compatibility, publishing, or consumer-fixture behavior.
+
 ## Install
 
 Published artifacts use Maven coordinates:
