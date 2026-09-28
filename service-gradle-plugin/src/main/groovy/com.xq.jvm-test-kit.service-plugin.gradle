@@ -1,0 +1,139 @@
+import com.xq.jvmtestkit.gradle.JvmTestKitServiceExtension
+import com.xq.jvmtestkit.gradle.PackageServiceTask
+import com.xq.jvmtestkit.gradle.StartE2eServiceTask
+import com.xq.jvmtestkit.gradle.StopE2eServiceTask
+import com.xq.jvmtestkit.gradle.ValidateJvmTestKitServiceConfigurationTask
+import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.repositories.PasswordCredentials
+import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.testing.Test
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JavaLauncher
+import org.gradle.jvm.toolchain.JavaToolchainService
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+
+import java.time.Duration
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+}
+
+def jvmTestKitService = extensions.create(
+        'jvmTestKitService',
+        JvmTestKitServiceExtension
+)
+jvmTestKitService.artifactName.convention(project.name + '.jar')
+jvmTestKitService.healthUrl.convention('http://127.0.0.1:8080/actuator/health')
+jvmTestKitService.startupTimeout.convention(Duration.ofSeconds(120))
+jvmTestKitService.jvmArgs.convention([])
+jvmTestKitService.environment.convention([:])
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'XqGitHubPackages'
+        url = uri('https://maven.pkg.github.com/ExperienceQuality/jvm-test-kit')
+        content {
+            includeGroup('com.xq')
+        }
+        credentials(PasswordCredentials) {
+            username = providers.environmentVariable('GITHUB_ACTOR').orNull
+            password = providers.environmentVariable('GITHUB_TOKEN').orNull
+        }
+    }
+}
+
+def sourceSets = extensions.getByType(SourceSetContainer)
+def e2eSourceSet = sourceSets.create('e2e')
+
+dependencies {
+    add('testImplementation', 'org.junit.jupiter:junit-jupiter:6.0.0')
+    add('testRuntimeOnly', 'org.junit.platform:junit-platform-launcher:6.0.0')
+    add(e2eSourceSet.implementationConfigurationName, 'org.junit.jupiter:junit-jupiter-api:6.0.0')
+    add(e2eSourceSet.implementationConfigurationName, 'com.xq:jvm-test-kit:2.0.0')
+    add(e2eSourceSet.runtimeOnlyConfigurationName, 'org.junit.jupiter:junit-jupiter-engine:6.0.0')
+    add(e2eSourceSet.runtimeOnlyConfigurationName, 'org.junit.platform:junit-platform-launcher:6.0.0')
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+}
+
+def e2eTest = tasks.register('e2eTest', Test) {
+    description = 'Runs the JVM Test Kit end-to-end suite against a running service.'
+    group = 'verification'
+    dependsOn(tasks.named(e2eSourceSet.classesTaskName))
+    testClassesDirs = e2eSourceSet.output.classesDirs
+    classpath = e2eSourceSet.runtimeClasspath
+    useJUnitPlatform()
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('e2e', DefaultTask) {
+    description = 'Runs end-to-end tests against the configured service URI.'
+    group = 'verification'
+    dependsOn(e2eTest)
+}
+
+def validateConfiguration = tasks.register(
+        'validateJvmTestKitServiceConfiguration',
+        ValidateJvmTestKitServiceConfigurationTask
+) {
+    description = 'Validates JVM Test Kit service convention configuration.'
+    group = 'verification'
+    artifactName.set(jvmTestKitService.artifactName)
+    healthUrl.set(jvmTestKitService.healthUrl)
+    startupTimeout.set(jvmTestKitService.startupTimeout)
+}
+
+def bootJarTask = tasks.named('bootJar', BootJar)
+def packageService = tasks.register('packageService', PackageServiceTask) {
+    description = 'Packages the runnable service JAR in the CI artifact layout.'
+    group = 'build'
+    dependsOn(bootJarTask, validateConfiguration)
+    bootJar.set(bootJarTask.flatMap { it.archiveFile })
+    outputJar.set(layout.buildDirectory.file(
+            jvmTestKitService.artifactName.map { name -> "service/${name}" }
+    ))
+}
+
+tasks.register('ci', DefaultTask) {
+    description = 'Runs checks and produces the packaged service artifact.'
+    group = 'verification'
+    dependsOn(tasks.named('check'), packageService)
+}
+
+def toolchains = extensions.getByType(JavaToolchainService)
+def launcher = toolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(21)
+}
+
+def startE2eService = tasks.register('startE2eService', StartE2eServiceTask) {
+    description = 'Starts the packaged service and waits for its health endpoint.'
+    group = 'verification'
+    dependsOn(packageService, validateConfiguration)
+    serviceJar.set(packageService.flatMap { it.outputJar })
+    javaExecutable.set(launcher.map { JavaLauncher value -> value.executablePath })
+    healthUrl.set(jvmTestKitService.healthUrl)
+    startupTimeout.set(jvmTestKitService.startupTimeout)
+    jvmArgs.set(jvmTestKitService.jvmArgs)
+    environment.set(jvmTestKitService.environment)
+    pidFile.set(layout.buildDirectory.file('application.pid'))
+    logFile.set(layout.buildDirectory.file('application.log'))
+}
+
+tasks.register('stopE2eService', StopE2eServiceTask) {
+    description = 'Stops the E2E service process started by startE2eService.'
+    group = 'verification'
+    mustRunAfter(startE2eService)
+    serviceJar.set(packageService.flatMap { it.outputJar })
+    pidFile.set(layout.buildDirectory.file('application.pid'))
+}

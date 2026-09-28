@@ -3,7 +3,9 @@
 `com.xq.jvm-test-kit.service-plugin` is a versioned convention plugin for Java 21 and
 Spring Boot services. Its published implementation coordinates are
 `com.xq.jvm-test-kit:service-plugin:<pluginVersion>`; Gradle also publishes
-the standard plugin marker.
+the standard plugin marker. Convention wiring lives in the precompiled Groovy
+script `src/main/groovy/com.xq.jvm-test-kit.service-plugin.gradle`; supporting
+typed task classes live beside it under `com.xq.jvmtestkit.gradle`.
 
 Run producer verification from the repository root:
 

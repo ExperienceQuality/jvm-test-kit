@@ -62,7 +62,9 @@ Use one released version in each consumer repository. CI needs
 
 The service plugin supplies the common Java 21, Spring Boot 4.1.1, dependency
 management, JUnit, E2E source-set, packaging, and CI task conventions used by
-XQ JVM services. Consumers pin an immutable plugin version in their settings:
+XQ JVM services. It is implemented as a precompiled Groovy script plugin so
+its convention wiring stays readable in Gradle's native DSL. Consumers pin an
+immutable plugin version in their settings:
 
 ```groovy
 pluginManagement {

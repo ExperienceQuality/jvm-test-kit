@@ -1,5 +1,5 @@
 plugins {
-    id 'java-gradle-plugin'
+    id 'groovy-gradle-plugin'
     id 'maven-publish'
 }
 
@@ -28,17 +28,6 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:6.0.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-gradlePlugin {
-    plugins {
-        serviceConventions {
-            id = 'com.xq.jvm-test-kit.service-plugin'
-            implementationClass = 'com.xq.jvmtestkit.gradle.ServiceConventionsPlugin'
-            displayName = 'XQ Service Conventions'
-            description = 'Shared Java 21 and Spring Boot service build conventions'
-        }
-    }
 }
 
 def semver = ~/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?/
