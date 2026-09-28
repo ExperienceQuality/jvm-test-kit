@@ -9,6 +9,10 @@ calls, request setup, immutable responses, and JSON/status assertions. It is
 intended for black-box service tests where the service is already running in
 the test process, a test container, or a local integration environment.
 
+This repository also owns the independently versioned
+`com.xq.jvm-test-kit.service-plugin` Gradle plugin. Library and plugin releases do not
+share a version number.
+
 ## Template Use
 
 This repository is also a template for new XQ JVM test-kit libraries. After
@@ -53,6 +57,72 @@ test {
 
 Use one released version in each consumer repository. CI needs
 `packages: read` and a token that can read GitHub Packages.
+
+## Service Gradle Plugin
+
+The service plugin supplies the common Java 21, Spring Boot 4.1.1, dependency
+management, JUnit, E2E source-set, packaging, and CI task conventions used by
+XQ JVM services. Consumers pin an immutable plugin version in their settings:
+
+```groovy
+pluginManagement {
+    repositories {
+        maven {
+            url = uri("https://maven.pkg.github.com/ExperienceQuality/jvm-test-kit")
+            credentials {
+                username = providers.environmentVariable("GITHUB_ACTOR").orNull
+                password = providers.environmentVariable("GITHUB_TOKEN").orNull
+            }
+        }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+```
+
+```groovy
+plugins {
+    id 'com.xq.jvm-test-kit.service-plugin' version '0.1.0'
+}
+
+group = 'com.xq'
+version = '1.0.0'
+
+jvmTestKitService {
+    artifactName = 'example-service.jar'
+    healthUrl = 'http://127.0.0.1:8080/actuator/health'
+    startupTimeout = java.time.Duration.ofSeconds(120)
+    // Use inherited process environment for secrets.
+    environment = [SPRING_PROFILES_ACTIVE: 'e2e']
+}
+```
+
+The plugin implementation artifact is
+`com.xq.jvm-test-kit:service-plugin:<version>`. Gradle resolves its generated
+`com.xq.jvm-test-kit.service-plugin` marker automatically. Supported consumers use
+Gradle 8.14.5 or newer and Java 21. The producer currently uses Gradle 9.6.0;
+consumer compatibility is tested separately on Gradle 8.14.5.
+
+The plugin adds these tasks:
+
+- `packageService` copies `bootJar` to `build/service/<artifactName>`.
+- `ci` runs `check` and produces the packaged service.
+- `e2eTest` and `e2e` run the JVM Test Kit source set against an already
+  running service.
+- `startE2eService` starts the packaged JAR, writes `build/application.pid` and
+  `build/application.log`, and waits for `healthUrl`.
+- `stopE2eService` stops only the recorded process after verifying it owns the
+  packaged JAR. Missing or dead PIDs are handled idempotently; foreign live
+  PIDs are never killed.
+
+`startE2eService` inherits the caller environment. Keep credentials and other
+secrets there rather than in `jvmTestKitService.environment`, JVM arguments, source, or
+Gradle properties. The explicit environment map is for non-secret overrides.
+Database and container lifecycle remain consumer or CI responsibilities.
+
+Upgrade by changing the exact plugin pin and running the full service CI and
+E2E gates. Roll back by restoring the previous immutable version. Never use a
+dynamic version or a committed `mavenLocal()` fallback.
 
 ## Quick Start
 
@@ -148,4 +218,5 @@ Package `com.xq.jvmtestkit.rest`:
 ./gradlew check
 ./gradlew publishToMavenLocal
 ./gradlew -p fixtures/clean-consumer test -PkitVersion=2.0.0-dev
+./gradlew -p service-gradle-plugin clean test validatePlugins -PpluginVersion=0.1.0-test
 ```
