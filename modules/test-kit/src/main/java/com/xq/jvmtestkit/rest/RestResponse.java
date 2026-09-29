@@ -40,8 +40,8 @@ public final class RestResponse {
         return new String(body, Objects.requireNonNull(charset, "charset"));
     }
 
-    public RestAssertions should() {
-        return new DefaultRestAssertions(this);
+    public RestResponseAssert should() {
+        return RestResponseAssert.assertThat(this);
     }
 
     private static Map<String, List<String>> copyHeaders(Map<String, List<String>> source) {

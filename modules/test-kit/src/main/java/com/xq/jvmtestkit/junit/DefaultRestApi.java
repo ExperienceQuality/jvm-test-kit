@@ -1,7 +1,6 @@
 package com.xq.jvmtestkit.junit;
 
 import com.xq.jvmtestkit.rest.RestApi;
-import com.xq.jvmtestkit.rest.RestApiConfig;
 import com.xq.jvmtestkit.rest.RestRequest;
 import com.xq.jvmtestkit.rest.RestResponse;
 
@@ -25,14 +24,14 @@ final class DefaultRestApi implements RestApi, AutoCloseable {
     private final HttpClient client;
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    public DefaultRestApi(RestApiConfig config) {
-        Objects.requireNonNull(config, "config");
-        this.baseUri = config.baseUri();
+    public DefaultRestApi(URI baseUri) {
+        this.baseUri = Objects.requireNonNull(baseUri, "baseUri");
         this.client = HttpClient.newBuilder()
                 .connectTimeout(TIMEOUT)
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .build();
     }
+
 
     @Override
     public RestResponse get(String path) {

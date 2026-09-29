@@ -32,10 +32,47 @@ class RestResponseTest {
                 "{\"items\":[{\"id\":2},{\"id\":1}],\"extra\":true}".getBytes(StandardCharsets.UTF_8)
         );
 
-        response.should().status(201).matchJson("{\"items\":[{\"id\":1}]}");
-        assertThrows(AssertionError.class, () -> response.should().status(200));
+        response.should().hasStatus(201).containsJson("{\"items\":[{\"id\":1}]}");
+        assertThrows(AssertionError.class, () -> response.should().hasStatus(200));
         AssertionError mismatch = assertThrows(AssertionError.class,
-                () -> response.should().matchJson("{\"secret\":\"must-not-appear\"}"));
+                () -> response.should().containsJson("{\"secret\":\"must-not-appear\"}"));
         assertEquals(false, mismatch.getMessage().contains("must-not-appear"));
+    }
+
+    @Test
+    void supportsExactJsonAndJsonPathAssertions() {
+        RestResponse response = new RestResponse(
+                200,
+                Map.of("Content-Type", List.of("application/json")),
+                "{\"id\":7,\"items\":[{\"name\":\"A\"}],\"extra\":true}"
+                        .getBytes(StandardCharsets.UTF_8)
+        );
+
+        response.should()
+                .hasHeader("content-type", "application/json")
+                .hasJsonPathValue("$.id", 7)
+                .containsJson("{\"items\":[{\"name\":\"A\"}]}");
+        assertThrows(AssertionError.class,
+                () -> response.should().hasJsonBody("{\"id\":7}"));
+    }
+
+    @Test
+    void rejectsInvalidJsonAndMissingJsonPathsWithoutLeakingBody() {
+        RestResponse response = new RestResponse(200, Map.of(),
+                "{\"secret\":\"hidden\",\"value\":null}".getBytes(StandardCharsets.UTF_8));
+
+        AssertionError jsonFailure = assertThrows(AssertionError.class,
+                () -> response.should().hasJsonBody("not-json"));
+        AssertionError pathFailure = assertThrows(AssertionError.class,
+                () -> response.should().hasJsonPathValue("$.missing", "value"));
+        assertEquals(false, jsonFailure.getMessage().contains("hidden"));
+        assertEquals(false, pathFailure.getMessage().contains("hidden"));
+    }
+
+    @Test
+    void supportsRepeatedHeadersAndEmptyBody() {
+        RestResponse response = new RestResponse(204,
+                Map.of("Set-Cookie", List.of("a=1", "b=2")), new byte[0]);
+        response.should().hasHeader("set-cookie", "b=2").hasEmptyBody();
     }
 }

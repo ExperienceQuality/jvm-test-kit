@@ -1,30 +1,24 @@
 package com.xq.jvmtestkit.junit;
 
 import com.xq.jvmtestkit.rest.RestApi;
-import com.xq.jvmtestkit.rest.RestApiConfig;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 final class XqTestContext implements AutoCloseable {
     private final AtomicBoolean closed = new AtomicBoolean();
-    private RestApiConfig restConfig;
     private DefaultRestApi restApi;
 
-    RestApi rest(RestApiConfig config) {
-        ensureOpen();
-        if (restApi == null) {
-            restConfig = config;
-            restApi = new DefaultRestApi(config);
-        } else if (!restConfig.equals(config)) {
-            throw new IllegalStateException("The REST API is already configured differently in this XQ test invocation");
-        }
-        return restApi;
+    XqTestContext() {
+        XqConfiguration configuration = XqConfiguration.load(Thread.currentThread().getContextClassLoader());
+        restBaseUri = configuration.restBaseUri();
     }
+
+    private final java.net.URI restBaseUri;
 
     RestApi rest() {
         ensureOpen();
         if (restApi == null) {
-            throw new IllegalStateException("No REST API is configured; call Xq.rest(config) from @BeforeEach first");
+            restApi = new DefaultRestApi(restBaseUri);
         }
         return restApi;
     }
@@ -35,7 +29,6 @@ final class XqTestContext implements AutoCloseable {
             restApi.close();
         }
         restApi = null;
-        restConfig = null;
     }
 
     private void ensureOpen() {
