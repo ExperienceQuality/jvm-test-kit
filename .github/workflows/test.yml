@@ -1,0 +1,108 @@
+# hub-stage: test
+name: Test staged products
+
+on:
+  workflow_call:
+    inputs:
+      product:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+      commit:
+        required: true
+        type: string
+      artifact_name:
+        required: true
+        type: string
+    outputs:
+      evidence_name:
+        description: Sanitized verification evidence artifact
+        value: ${{ jobs.test.outputs.evidence_name }}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+    outputs:
+      evidence_name: ${{ steps.metadata.outputs.evidence_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - run: chmod +x ./gradlew
+      - id: metadata
+        name: Name test evidence artifact
+        env:
+          PRODUCT: ${{ inputs.product }}
+        run: echo "evidence_name=test-evidence-${PRODUCT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+      - name: Download immutable staging artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: .ci-staging
+      - name: Verify downloaded staged bytes
+        env:
+          COMMIT: ${{ inputs.commit }}
+          PRODUCT: ${{ inputs.product }}
+          VERSION: ${{ inputs.version }}
+        run: python3 ci/staging_manifest.py verify .ci-staging "$PRODUCT" "$VERSION" "$COMMIT"
+      - name: Test immutable staging and promotion controls
+        run: python3 ci/test_release_artifacts.py
+      - name: Test library and clean consumer against staged bytes
+        if: ${{ inputs.product == 'all' || inputs.product == 'library' }}
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          ./gradlew --no-daemon :test-kit:check -PreleaseVersion="$VERSION"
+          test -s build/reports/japicmp/report.txt
+          ./gradlew --no-daemon -p fixtures/clean-consumer clean check \
+            -PkitVersion="$VERSION" \
+            -PtestRepository="$GITHUB_WORKSPACE/.ci-staging/repository"
+      - name: Test plugin against staged marker and implementation
+        if: ${{ inputs.product == 'all' || inputs.product == 'plugin' }}
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          ./gradlew --no-daemon :service-plugin:test :service-plugin:validatePlugins \
+            -PpluginVersion="$VERSION" \
+            -PprebuiltPluginRepository="$GITHUB_WORKSPACE/.ci-staging/repository"
+      - name: Sanitize JUnit evidence
+        if: always()
+        run: |
+          mkdir -p .ci-evidence/test-results
+          for entry in \
+            'build/test-results:.ci-evidence/test-results/library' \
+            'modules/service-plugin/build/test-results:.ci-evidence/test-results/plugin' \
+            'fixtures/clean-consumer/build/test-results:.ci-evidence/test-results/consumer'; do
+            source="${entry%%:*}"
+            destination="${entry#*:}"
+            if [[ -d "$source" ]]; then
+              python3 ci/sanitize_junit.py "$source" "$destination"
+            fi
+          done
+      - name: Upload sanitized test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.metadata.outputs.evidence_name }}
+          path: |
+            .ci-evidence
+            build/reports/japicmp
+          if-no-files-found: error
+          retention-days: 30

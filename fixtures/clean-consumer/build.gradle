@@ -3,7 +3,29 @@ plugins {
 }
 
 repositories {
-    mavenLocal()
+    def testRepository = providers.gradleProperty('testRepository')
+    if (!testRepository.isPresent()) {
+        throw new GradleException('testRepository must point to the isolated JVM Test Kit Maven repository')
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'JvmTestKitTestRepository'
+                url = uri(testRepository.get())
+                def actor = providers.environmentVariable('GITHUB_ACTOR')
+                def token = providers.environmentVariable('GITHUB_TOKEN')
+                if (url.scheme in ['http', 'https'] && actor.isPresent() && token.isPresent()) {
+                    credentials {
+                        username = actor.get()
+                        password = token.get()
+                    }
+                }
+            }
+        }
+        filter {
+            includeGroup 'com.xq'
+        }
+    }
     mavenCentral()
 }
 

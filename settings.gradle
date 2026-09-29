@@ -1,1 +1,6 @@
 rootProject.name = 'jvm-test-kit'
+
+include 'test-kit', 'service-plugin'
+
+project(':test-kit').projectDir = file('modules/test-kit')
+project(':service-plugin').projectDir = file('modules/service-plugin')

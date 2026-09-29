@@ -1,0 +1,112 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'maven-publish'
+}
+
+group = 'com.xq.jvm-test-kit'
+version = providers.gradleProperty('pluginVersion')
+        .orElse(providers.environmentVariable('PLUGIN_VERSION'))
+        .orElse('0.1.0-dev')
+        .get()
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withSourcesJar()
+}
+
+repositories {
+    mavenCentral()
+    gradlePluginPortal()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-gradle-plugin:4.1.1'
+    implementation 'io.spring.gradle:dependency-management-plugin:1.1.7'
+
+    testImplementation platform('org.junit:junit-bom:6.0.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+gradlePlugin {
+    plugins {
+        serviceConventions {
+            id = 'com.xq.jvm-test-kit.service-plugin'
+            implementationClass = 'com.xq.jvmtestkit.gradle.ServiceConventionsPlugin'
+            displayName = 'XQ Service Conventions'
+            description = 'Shared Java 21 and Spring Boot service build conventions'
+        }
+    }
+}
+
+def semver = ~/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?/
+def testRepositoryPath = providers.gradleProperty('testRepository').orNull
+def testRepositoryDirectory = testRepositoryPath == null
+        ? layout.buildDirectory.dir('test-repository').get().asFile
+        : file(testRepositoryPath)
+
+tasks.register('verifyPluginVersion') {
+    doLast {
+        String candidate = project.version.toString()
+        if (!semver.matcher(candidate).matches()) {
+            throw new GradleException("pluginVersion must be SemVer (for example 1.2.3): ${candidate}")
+        }
+        if (candidate.endsWith('-SNAPSHOT')) {
+            throw new GradleException("pluginVersion must not be a SNAPSHOT: ${candidate}")
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = 'Test'
+            url = testRepositoryDirectory
+        }
+        maven {
+            name = 'GitHubPackages'
+            url = uri('https://maven.pkg.github.com/ExperienceQuality/jvm-test-kit')
+            credentials {
+                username = providers.environmentVariable('GITHUB_ACTOR').orNull
+                password = providers.environmentVariable('GITHUB_TOKEN').orNull
+            }
+        }
+    }
+}
+
+publishing.publications.withType(MavenPublication).configureEach {
+    pom {
+        name = 'XQ Service Gradle Plugin'
+        description = 'Shared Java 21 and Spring Boot service build conventions'
+        url = 'https://github.com/ExperienceQuality/jvm-test-kit'
+        licenses {
+            license {
+                name = 'The Apache License, Version 2.0'
+                url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+            }
+        }
+        scm {
+            connection = 'scm:git:https://github.com/ExperienceQuality/jvm-test-kit.git'
+            developerConnection = 'scm:git:ssh://github.com/ExperienceQuality/jvm-test-kit.git'
+            url = 'https://github.com/ExperienceQuality/jvm-test-kit'
+        }
+    }
+}
+
+tasks.withType(PublishToMavenRepository).configureEach {
+    dependsOn tasks.named('verifyPluginVersion')
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    def prebuiltPluginRepository = providers.gradleProperty('prebuiltPluginRepository')
+    if (prebuiltPluginRepository.isPresent()) {
+        systemProperty 'xq.plugin.testRepository', prebuiltPluginRepository.get()
+    } else {
+        dependsOn tasks.named('publishAllPublicationsToTestRepository')
+        systemProperty 'xq.plugin.testRepository', testRepositoryDirectory.absolutePath
+    }
+    systemProperty 'xq.plugin.version', project.version.toString()
+}
