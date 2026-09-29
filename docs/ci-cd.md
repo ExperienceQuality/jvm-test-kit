@@ -1,26 +1,72 @@
 # CI and release contract
 
-The repository-owned workflows in `.github/workflows` are immutable inputs to
-the v2 rebuild. The Gradle project supplies every task and artifact path they
-invoke.
+Delivery separates build, test, publish, and deploy responsibilities. The
+`Delivery` workflow routes an event through the reusable workflows in
+`.github/workflows`.
 
-## Verification
+## Event and tag routing
 
-Pull requests and pushes to `main` run `clean check`, an isolated Maven-local
-publication, the clean-consumer fixture, CycloneDX SBOM generation, and JUnit
-report sanitization. The clean consumer compiles and executes only the published
-public API.
+| Event | Product | Version | Result |
+| --- | --- | --- | --- |
+| Pull request, `main` push, manual run | both | `0.0.0-ci.<run>.<attempt>` | Build and test only |
+| `vMAJOR.MINOR.PATCH` | JVM Test Kit library | tag without `v` | Publish library, then create GitHub Release |
+| `plugin-vMAJOR.MINOR.PATCH` | Service Gradle Plugin | tag without `plugin-v` | Publish plugin implementation and marker, then create GitHub Release |
 
-## Release
+Release tags must identify the supplied commit on protected `main`. A release
+publishes exactly one product; the other product's version is unchanged.
 
-Stable releases use immutable `vMAJOR.MINOR.PATCH` tags on protected `main`.
-The tag selects `releaseVersion`; the workflow rejects an already published
-Maven version and publishes `com.xq:jvm-test-kit` to GitHub Packages.
+## Build once and promote
 
-Consumers need an immutable version, the GitHub Packages repository, and
-credentials supplied through `GITHUB_ACTOR` and `GITHUB_TOKEN`. GitHub Actions
-requires `packages: read`, and the package must grant the consumer repository
-access. Never log credentials or commit a `mavenLocal` fallback.
+The build stage publishes the selected product into an isolated Maven
+repository under `.ci-staging`. It records product, version, commit, every file
+path, and every SHA-256 digest in `manifest.json` and `SHA256SUMS`, then uploads
+the directory as one uniquely named workflow artifact.
 
-Version 2 is an intentional compatibility reset. Older polling, PostgreSQL,
-OpenAPI, and low-level HTTP APIs are not part of the v2 contract.
+The test stage downloads that artifact, verifies its identity and byte set,
+and resolves consumers from the staged repository. It does not rebuild the
+publication being tested. Library validation includes compatibility and the
+clean-consumer fixture. Plugin validation includes TestKit, plugin validation,
+and exact marker resolution.
+
+The publish stage downloads and verifies the same artifact, creates provenance
+attestations, and promotes the staged Maven files byte-for-byte. Promotion is
+idempotent only when an existing remote file is identical; a different remote
+byte fails closed. Mutable Maven metadata is not promoted. After upload, a
+clean remote consumer resolves the library or the plugin marker at the exact
+version.
+
+The deploy stage runs only after remote verification. It creates the GitHub
+Release and attaches the staging manifest and checksums. Package publication
+and release creation are never performed for pull requests, branch pushes, or
+manual verification runs.
+
+## Permissions and credentials
+
+Workflows default to `contents: read`. Test adds `actions: read` and
+`packages: read`. Publish receives `packages: write`, `id-token: write`, and
+`attestations: write` inside the protected `release` environment. Only the
+final release job receives `contents: write`.
+
+GitHub Packages credentials come from the runtime `GITHUB_ACTOR` and
+`GITHUB_TOKEN`. Never print or persist them. Consumer repositories need
+`packages: read` and explicit package access.
+
+## Rollback
+
+Published Maven versions are immutable. Do not overwrite or delete a bad
+version. Roll back consumers by restoring the preceding known-good exact
+library or plugin version. Correct the source, run all gates, and issue a new
+SemVer tag for only the affected product. The manifest, checksums, test
+evidence, provenance, and GitHub Release preserve the audit trail.
+
+## Local acceptance
+
+```bash
+./gradlew --no-daemon check :service-plugin:validatePlugins
+node /path/to/hub/scripts/hub.mjs workflow-check --repo jvm-test-kit
+git diff --check
+```
+
+For product-specific commands, use the canonical module READMEs:
+[test-kit](../modules/test-kit/README.md) and
+[service-plugin](../modules/service-plugin/README.md).

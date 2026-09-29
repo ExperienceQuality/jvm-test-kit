@@ -1,0 +1,70 @@
+# hub-stage: build
+name: Build staged products
+
+on:
+  workflow_call:
+    inputs:
+      product:
+        description: Product to stage (all, library, or plugin)
+        required: true
+        type: string
+      version:
+        description: Immutable product version
+        required: true
+        type: string
+      commit:
+        description: Exact source commit to build
+        required: true
+        type: string
+    outputs:
+      artifact_name:
+        description: Name of the immutable staging artifact
+        value: ${{ jobs.build.outputs.artifact_name }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      artifact_name: ${{ steps.metadata.outputs.artifact_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - run: chmod +x ./gradlew
+      - id: metadata
+        name: Name immutable staging artifact
+        env:
+          PRODUCT: ${{ inputs.product }}
+        run: echo "artifact_name=staged-${PRODUCT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+      - name: Build Maven staging repository once
+        env:
+          COMMIT: ${{ inputs.commit }}
+          PRODUCT: ${{ inputs.product }}
+          VERSION: ${{ inputs.version }}
+        run: bash ci/stage_release.sh "$PRODUCT" "$VERSION" "$COMMIT" .ci-staging
+      - name: Verify staged bytes before upload
+        env:
+          COMMIT: ${{ inputs.commit }}
+          PRODUCT: ${{ inputs.product }}
+          VERSION: ${{ inputs.version }}
+        run: python3 ci/staging_manifest.py verify .ci-staging "$PRODUCT" "$VERSION" "$COMMIT"
+      - name: Upload immutable staging artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.metadata.outputs.artifact_name }}
+          path: .ci-staging
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+

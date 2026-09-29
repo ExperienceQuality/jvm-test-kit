@@ -1,0 +1,123 @@
+# hub-stage: deploy
+name: Delivery
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags:
+      - 'v*.*.*'
+      - 'plugin-v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: delivery-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      product: ${{ steps.route.outputs.product }}
+      release: ${{ steps.route.outputs.release }}
+      version: ${{ steps.route.outputs.version }}
+    steps:
+      - id: route
+        name: Route independent product release tags
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          if [[ "$REF_TYPE" != tag ]]; then
+            echo 'product=all' >> "$GITHUB_OUTPUT"
+            echo 'release=false' >> "$GITHUB_OUTPUT"
+            echo "version=0.0.0-ci.${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+          elif [[ "$REF_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo 'product=library' >> "$GITHUB_OUTPUT"
+            echo 'release=true' >> "$GITHUB_OUTPUT"
+            echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          elif [[ "$REF_NAME" =~ ^plugin-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo 'product=plugin' >> "$GITHUB_OUTPUT"
+            echo 'release=true' >> "$GITHUB_OUTPUT"
+            echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "Unsupported release tag: $REF_NAME" >&2
+            exit 1
+          fi
+
+  build:
+    needs: route
+    uses: ./.github/workflows/build.yml
+    permissions:
+      contents: read
+    with:
+      product: ${{ needs.route.outputs.product }}
+      version: ${{ needs.route.outputs.version }}
+      commit: ${{ github.sha }}
+
+  test:
+    needs: [route, build]
+    uses: ./.github/workflows/test.yml
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+    with:
+      product: ${{ needs.route.outputs.product }}
+      version: ${{ needs.route.outputs.version }}
+      commit: ${{ github.sha }}
+      artifact_name: ${{ needs.build.outputs.artifact_name }}
+
+  publish:
+    if: ${{ needs.route.outputs.release == 'true' }}
+    needs: [route, build, test]
+    uses: ./.github/workflows/publish.yml
+    permissions:
+      actions: read
+      attestations: write
+      contents: read
+      id-token: write
+      packages: write
+    with:
+      product: ${{ needs.route.outputs.product }}
+      version: ${{ needs.route.outputs.version }}
+      commit: ${{ github.sha }}
+      artifact_name: ${{ needs.build.outputs.artifact_name }}
+
+  deploy:
+    if: ${{ needs.route.outputs.release == 'true' }}
+    needs: [route, build, test, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Download staged release evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact_name }}
+          path: .ci-staging
+      - name: Download test evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.test.outputs.evidence_name }}
+          path: .ci-evidence
+      - name: Create release from promoted immutable evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRODUCT: ${{ needs.route.outputs.product }}
+          VERSION: ${{ needs.route.outputs.version }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --generate-notes \
+            --notes "Product: ${PRODUCT}; version: ${VERSION}. Roll back consumers by pinning the preceding known-good version; published package bytes remain immutable." \
+            .ci-staging/manifest.json \
+            .ci-staging/SHA256SUMS

@@ -1,0 +1,108 @@
+# hub-stage: publish
+name: Publish staged product
+
+on:
+  workflow_call:
+    inputs:
+      product:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+      commit:
+        required: true
+        type: string
+      artifact_name:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: release
+    permissions:
+      actions: read
+      attestations: write
+      contents: read
+      id-token: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.commit }}
+      - name: Validate product tag and protected-main ancestry
+        env:
+          COMMIT: ${{ inputs.commit }}
+          PRODUCT: ${{ inputs.product }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          case "$PRODUCT" in
+            library) expected_tag="v$VERSION" ;;
+            plugin) expected_tag="plugin-v$VERSION" ;;
+            *) echo "Only one independently versioned product may be published" >&2; exit 1 ;;
+          esac
+          test "$GITHUB_REF_TYPE" = tag
+          test "$GITHUB_REF_NAME" = "$expected_tag"
+          test "$GITHUB_SHA" = "$COMMIT"
+          git fetch origin main --depth=1
+          git merge-base --is-ancestor "$COMMIT" origin/main
+      - name: Download immutable staging artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: .ci-staging
+      - name: Verify staged identity and bytes
+        env:
+          COMMIT: ${{ inputs.commit }}
+          PRODUCT: ${{ inputs.product }}
+          VERSION: ${{ inputs.version }}
+        run: python3 ci/staging_manifest.py verify .ci-staging "$PRODUCT" "$VERSION" "$COMMIT"
+      - name: Attest exact staged publication
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: .ci-staging/repository/**
+      - name: Promote exact staged bytes to GitHub Packages
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 ci/promote_maven_repository.py \
+            .ci-staging/repository \
+            "https://maven.pkg.github.com/${GITHUB_REPOSITORY}" \
+            --username "$GITHUB_ACTOR" \
+            --token "$GITHUB_TOKEN"
+      - name: Verify published library through clean remote consumer
+        if: ${{ inputs.product == 'library' }}
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          ./gradlew --no-daemon -p fixtures/clean-consumer clean check \
+            -PkitVersion="$VERSION" \
+            -PtestRepository="https://maven.pkg.github.com/${GITHUB_REPOSITORY}"
+      - name: Verify published plugin marker through remote resolution
+        if: ${{ inputs.product == 'plugin' }}
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          ./gradlew --no-daemon :service-plugin:test \
+            --tests com.xq.jvmtestkit.gradle.ServiceConventionsPluginTest.resolvesGeneratedMarkerAtExactVersion \
+            -PpluginVersion="$VERSION" \
+            -PprebuiltPluginRepository="https://maven.pkg.github.com/${GITHUB_REPOSITORY}"
+      - name: Record rollback guidance
+        if: failure()
+        run: |
+          echo '### Publication rollback' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Published Maven bytes are immutable: never overwrite or delete them.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Keep consumers pinned to the preceding known-good product version, then issue a corrected new version.' >> "$GITHUB_STEP_SUMMARY"
+
