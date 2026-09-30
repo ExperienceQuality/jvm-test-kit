@@ -1,12 +1,16 @@
 package com.xq.jvmtestkit.junit;
 
 import com.xq.jvmtestkit.rest.RestApi;
+import com.xq.jvmtestkit.db.DatabaseRegistry;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 final class XqTestContext implements AutoCloseable {
     private final AtomicBoolean closed = new AtomicBoolean();
     private DefaultRestApi restApi;
+    private final DatabaseRegistry databases = DatabaseConfiguration.load(Thread.currentThread().getContextClassLoader());
+
+    DatabaseRegistry db() { ensureOpen(); return databases; }
 
     XqTestContext() {
         XqConfiguration configuration = XqConfiguration.load(Thread.currentThread().getContextClassLoader());
@@ -29,6 +33,7 @@ final class XqTestContext implements AutoCloseable {
             restApi.close();
         }
         restApi = null;
+        databases.close();
     }
 
     private void ensureOpen() {
