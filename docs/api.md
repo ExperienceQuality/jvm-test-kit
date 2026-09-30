@@ -55,6 +55,16 @@ bodies or header values.
 
 ## Safety defaults
 
+## Database clients
+
+Named JDBC clients use `xq.database.<name>.url`, `.username`, and `.password`
+properties. Values may be direct values or explicit `-env VARIABLE` references.
+`Xq.db().get("name")` is valid only during an active `@XqTest` invocation.
+`withConnection` scopes and closes a connection; `transaction` disables
+autocommit, commits successful callbacks, and rolls back failures. Credentials
+are never included in diagnostics. Consumers provide the PostgreSQL JDBC
+driver and own SQL, migrations, and cleanup.
+
 - Ten-second connection and request timeout.
 - Redirects are not followed.
 - Request and response bodies are limited to 2 MiB.

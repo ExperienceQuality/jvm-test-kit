@@ -28,6 +28,20 @@ product they use.
 - [CI and release contract](docs/ci-cd.md): immutable staging, tag routing,
   permissions, verification, and rollback.
 
+## Database clients
+
+Configure named JDBC clients in the consumer’s classpath-root `xq.properties`:
+
+```properties
+xq.database.main.url=jdbc:postgresql://127.0.0.1:5432/app
+xq.database.main.username=-env XQ_DB_USER
+xq.database.main.password=-env XQ_DB_PASSWORD
+```
+
+Inside `@XqTest`, use `Xq.db().get("main")` for scoped connections or explicit
+transactions. The kit does not bundle a JDBC driver; consumers own SQL,
+migrations, schemas, and cleanup.
+
 ## Local verification
 
 Run the complete repository gate:
