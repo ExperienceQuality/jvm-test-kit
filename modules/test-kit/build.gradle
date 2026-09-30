@@ -137,7 +137,9 @@ tasks.register('japicmp', me.champeau.gradle.japicmp.JapicmpTask) {
     onlyBinaryIncompatibleModified = true
     reportOnlySummary = true
     def major = project.version.toString().tokenize('.')[0].toInteger()
-    failOnModification = major <= 2
+    // v3 intentionally breaks the v2 public API. CI uses 0.0.0-ci.* staging
+    // versions, so gate only v2 releases instead of treating CI as v2.
+    failOnModification = major == 2
     ignoreMissingClasses = true
     txtOutputFile = layout.buildDirectory.file('reports/japicmp/report.txt')
     newArchives.from(tasks.named('jar'))
