@@ -8,7 +8,7 @@ plugins {
 group = 'com.xq'
 version = providers.gradleProperty('releaseVersion')
         .orElse(providers.environmentVariable('RELEASE_VERSION'))
-        .orElse('2.0.0-dev')
+        .orElse('3.0.0-dev')
         .get()
 
 base {
@@ -70,6 +70,8 @@ dependencies {
     api 'org.junit.jupiter:junit-jupiter-api'
 
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.21.5'
+    api 'org.assertj:assertj-core:3.27.6'
+    implementation 'net.javacrumbs.json-unit:json-unit-assertj:4.1.0'
 
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.junit.jupiter:junit-jupiter-params'
@@ -134,7 +136,10 @@ tasks.register('japicmp', me.champeau.gradle.japicmp.JapicmpTask) {
     onlyModified = false
     onlyBinaryIncompatibleModified = true
     reportOnlySummary = true
-    failOnModification = true
+    def major = project.version.toString().tokenize('.')[0].toInteger()
+    // v3 intentionally breaks the v2 public API. CI uses 0.0.0-ci.* staging
+    // versions, so gate only v2 releases instead of treating CI as v2.
+    failOnModification = major == 2
     ignoreMissingClasses = true
     txtOutputFile = layout.buildDirectory.file('reports/japicmp/report.txt')
     newArchives.from(tasks.named('jar'))
@@ -151,5 +156,4 @@ tasks.named('cyclonedxBom', org.cyclonedx.gradle.CycloneDxTask) {
 
 test {
     useJUnitPlatform()
-    exclude '**/XqExtensionContractTest$*.class'
 }

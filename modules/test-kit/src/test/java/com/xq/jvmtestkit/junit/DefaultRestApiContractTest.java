@@ -2,7 +2,6 @@ package com.xq.jvmtestkit.junit;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import com.xq.jvmtestkit.rest.RestApiConfig;
 import com.xq.jvmtestkit.rest.RestRequest;
 import com.xq.jvmtestkit.rest.RestResponse;
 import org.junit.jupiter.api.AfterEach;
@@ -44,7 +43,7 @@ class DefaultRestApiContractTest {
         });
         server.start();
 
-        try (DefaultRestApi api = new DefaultRestApi(RestApiConfig.at(baseUri("/api/")))) {
+        try (DefaultRestApi api = new DefaultRestApi(baseUri("/api/"))) {
             RestResponse response = api.post(
                     "/routines",
                     RestRequest.builder()
@@ -53,7 +52,7 @@ class DefaultRestApiContractTest {
                             .build()
             );
 
-            response.should().status(201).matchJson(Map.of("name", "Strength A"));
+            response.should().hasStatus(201).containsJson(Map.of("name", "Strength A"));
             assertEquals("POST", method.get());
             assertEquals("user-1", user.get());
             assertEquals("{\"name\":\"Strength A\"}", requestBody.get());
@@ -69,10 +68,10 @@ class DefaultRestApiContractTest {
                 "{\"method\":\"" + exchange.getRequestMethod() + "\"}"));
         server.start();
 
-        try (DefaultRestApi api = new DefaultRestApi(RestApiConfig.at(baseUri("/api/")))) {
-            api.get("/item").should().status(200).matchJson("{\"method\":\"GET\"}");
+        try (DefaultRestApi api = new DefaultRestApi(baseUri("/api/"))) {
+            api.get("/item").should().hasStatus(200).hasJsonBody("{\"method\":\"GET\"}");
             api.put("/item", RestRequest.builder().jsonBody(Map.of("value", 1)).build())
-                    .should().status(200).matchJson("{\"method\":\"PUT\"}");
+                    .should().hasStatus(200).hasJsonBody("{\"method\":\"PUT\"}");
             assertThrows(IllegalArgumentException.class,
                     () -> api.get("/item", RestRequest.builder().jsonBody(Map.of("bad", true)).build()));
             assertThrows(IllegalArgumentException.class, () -> api.get("//outside.test/item"));
@@ -84,7 +83,7 @@ class DefaultRestApiContractTest {
     void refusesCallsAfterInvocationClose() throws Exception {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.start();
-        DefaultRestApi api = new DefaultRestApi(RestApiConfig.at(baseUri("/")));
+        DefaultRestApi api = new DefaultRestApi(baseUri("/"));
         api.close();
 
         IllegalStateException failure = assertThrows(IllegalStateException.class, () -> api.get("/anything"));
@@ -102,7 +101,7 @@ class DefaultRestApiContractTest {
         });
         server.start();
 
-        try (DefaultRestApi api = new DefaultRestApi(RestApiConfig.at(baseUri("/")))) {
+        try (DefaultRestApi api = new DefaultRestApi(baseUri("/"))) {
             IllegalArgumentException requestFailure = assertThrows(IllegalArgumentException.class,
                     () -> api.post("/large", RestRequest.builder()
                             .jsonBody("x".repeat(2 * 1024 * 1024))

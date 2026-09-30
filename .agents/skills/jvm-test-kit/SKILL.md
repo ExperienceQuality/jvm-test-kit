@@ -15,11 +15,13 @@ Use this skill when adding or changing service E2E tests that consume
 - Give CI `packages: read`; never print package credentials.
 - Never commit a `mavenLocal` fallback or copied kit source.
 
-## JUnit lifecycle
+## Configuration and JUnit lifecycle
 
 - Annotate the E2E class with `@XqTest`.
-- Configure one `RestApiConfig` in `@BeforeEach` with `Xq.rest(config)`.
-- Use `Xq.rest()` only inside the active test invocation.
+- Add exactly one classpath-root `xq.properties` to consumer test resources.
+- Set required `xq.rest.base-uri` property. Use service-relative paths in requests.
+- `@XqTest` loads configuration and creates one REST helper per test invocation.
+- Use `Xq.rest()` only inside the active test invocation. Do not construct `RestApiConfig`.
 - Keep service-specific payloads and scenarios in the consumer repository.
 
 ## HTTP usage
@@ -27,7 +29,10 @@ Use this skill when adding or changing service E2E tests that consume
 - Use `RestRequest.empty()` when no headers or body are needed.
 - Use `RestRequest.builder()` for headers and JSON bodies.
 - Use service-relative paths only.
-- Assert with `response.should().status(...).matchJson(...)`.
+- Assert with `response.should().hasStatus(...).containsJson(...)` or
+  `RestResponseAssert.assertThat(response)`.
+- Use `hasJsonBody(...)` for exact JsonUnit comparison and `containsJson(...)` for
+  extra-field/extra-array-item tolerant matching. Use `hasJsonPathValue(...)` for paths.
 - Use `bodyUtf8()` and the consumer's JSON mapper to extract generated values.
 - Do not add RestAssured wrappers, custom lifecycle extensions, or copied kit classes.
 

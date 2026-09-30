@@ -1,7 +1,6 @@
 package com.xq.jvmtestkit.junit;
 
 import com.xq.jvmtestkit.rest.RestApi;
-import com.xq.jvmtestkit.rest.RestApiConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
@@ -36,7 +35,7 @@ class XqExtensionContractTest {
 
     @Test
     void rejectsInactiveAndUnconfiguredAccessAndDoesNotPropagateToWorkerThreads() {
-        SummaryGeneratingListener listener = execute(UnconfiguredConsumer.class, WorkerThreadConsumer.class);
+        SummaryGeneratingListener listener = execute(WorkerThreadConsumer.class);
 
         assertEquals(0, listener.getSummary().getFailures().size());
         assertTrue(assertThrows(IllegalStateException.class, Xq::rest).getMessage().contains("@XqTest"));
@@ -59,7 +58,7 @@ class XqExtensionContractTest {
 
         @BeforeEach
         void configure() {
-            RestApi current = Xq.rest(RestApiConfig.at(URI.create("http://127.0.0.1:1/")));
+            RestApi current = Xq.rest();
             if (previous != null) {
                 assertNotSame(previous, current);
             }
@@ -79,10 +78,10 @@ class XqExtensionContractTest {
     }
 
     @XqTest
-    static class UnconfiguredConsumer {
+    static class ConfiguredFromPropertiesConsumer {
         @Test
-        void rejectsUnconfiguredAccess() {
-            assertTrue(assertThrows(IllegalStateException.class, Xq::rest).getMessage().contains("@BeforeEach"));
+        void readsConfigurationWithoutBeforeEachSetup() {
+            assertTrue(Xq.rest() != null);
         }
     }
 
@@ -90,7 +89,7 @@ class XqExtensionContractTest {
     static class WorkerThreadConsumer {
         @BeforeEach
         void configure() {
-            Xq.rest(RestApiConfig.at(URI.create("http://127.0.0.1:1/")));
+            Xq.rest();
         }
 
         @Test

@@ -25,7 +25,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'com.xq:jvm-test-kit:2.0.0'
+    testImplementation 'com.xq:jvm-test-kit:3.0.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -39,30 +39,28 @@ grant the consumer repository access.
 
 ## Quick start
 
+Add exactly one classpath-root `xq.properties` to consumer test resources:
+
+```properties
+xq.rest.base-uri=http://127.0.0.1:8080/
+```
+
 ```java
 import com.xq.jvmtestkit.junit.Xq;
 import com.xq.jvmtestkit.junit.XqTest;
-import com.xq.jvmtestkit.rest.RestApiConfig;
 import com.xq.jvmtestkit.rest.RestRequest;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.net.URI;
 import java.util.Map;
 
 @XqTest
 class RoutineApiE2ETest {
-    @BeforeEach
-    void configureApi() {
-        Xq.rest(RestApiConfig.at(URI.create("http://127.0.0.1:8080/api/")));
-    }
-
     @Test
     void createsRoutine() {
         Xq.rest().post(
                 "/routines",
                 RestRequest.builder().jsonBody(Map.of("name", "Strength A")).build()
-        ).should().status(201).matchJson(Map.of("name", "Strength A"));
+        ).should().hasStatus(201).containsJson(Map.of("name", "Strength A"));
     }
 }
 ```

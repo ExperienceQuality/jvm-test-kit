@@ -1,22 +1,25 @@
-# JVM Test Kit v2 API
+# JVM Test Kit REST API
 
 `com.xq:jvm-test-kit` is a small Java 21 library for HTTP-based service E2E
-tests with JUnit Jupiter. Version 2 intentionally replaces the earlier API.
+tests with JUnit Jupiter. Version 3 loads REST configuration from consumer test resources.
 
-## Configure one API per test invocation
+## Configure service endpoint
+
+Consumer test resources must contain one classpath-root `xq.properties`:
+
+```properties
+xq.rest.base-uri=http://localhost:8080/
+```
 
 ```java
 @XqTest
 class RoutineE2ETest {
-    @BeforeEach
-    void configure() {
-        Xq.rest(RestApiConfig.at(URI.create("http://localhost:8080/")));
-    }
+    // Xq.rest() reads xq.rest.base-uri from xq.properties.
 }
 ```
 
 `@XqTest` creates and closes an isolated context for every invocation.
-`Xq.rest()` is valid only after configuration and on the active test thread.
+`Xq.rest()` is valid only inside the active test thread.
 
 ## Send requests
 
@@ -30,8 +33,8 @@ RestResponse created = Xq.rest().post(
 );
 
 created.should()
-        .status(201)
-        .matchJson("{\"name\":\"Strength A\"}");
+        .hasStatus(201)
+        .containsJson("{\"name\":\"Strength A\"}");
 ```
 
 `RestApi` supports GET, POST, and PUT. Paths are service-relative and cannot
@@ -43,10 +46,9 @@ UTF-8 and receive `Content-Type: application/json` unless one was supplied.
 
 ## JSON matching
 
-`matchJson` requires expected object fields and expected array elements to be
-present. Object key order and array order are ignored, and extra actual fields
-and array elements are allowed. Duplicate expected array elements require
-distinct actual matches. Scalars compare exactly.
+`hasJsonBody` performs exact JsonUnit comparison. `containsJson` ignores extra
+object fields and array items, and array order. `hasJsonPathValue` checks a
+single JsonUnit path.
 
 Failures report bounded, redacted response metadata rather than raw response
 bodies or header values.
