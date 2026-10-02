@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class ServicePluginConfigurer {
-    private static final String JVM_TEST_KIT_VERSION = "2.0.0";
+    private static final String JVM_TEST_KIT_VERSION = "3.0.0";
 
     private ServicePluginConfigurer() {
     }
@@ -47,12 +47,13 @@ public final class ServicePluginConfigurer {
         extension.getStartupTimeout().convention(Duration.ofSeconds(120));
         extension.getJvmArgs().convention(List.of());
         extension.getEnvironment().convention(Map.of());
+        extension.getCucumberDependencyInjection().convention("pico");
 
         JavaPluginExtension java = project.getExtensions().getByType(JavaPluginExtension.class);
         java.getToolchain().getLanguageVersion().set(JavaLanguageVersion.of(21));
 
         configureRepositories(project.getRepositories(), project);
-        configureDependenciesAndSourceSets(project);
+        configureDependenciesAndSourceSets(project, extension);
         configureTasks(project, extension);
     }
 
@@ -69,7 +70,7 @@ public final class ServicePluginConfigurer {
         });
     }
 
-    private static void configureDependenciesAndSourceSets(Project project) {
+    private static void configureDependenciesAndSourceSets(Project project, JvmTestKitServiceExtension extension) {
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         SourceSet e2e = sourceSets.create("e2e");
 
@@ -79,6 +80,18 @@ public final class ServicePluginConfigurer {
         project.getDependencies().add(e2e.getImplementationConfigurationName(), "com.xq:jvm-test-kit:" + JVM_TEST_KIT_VERSION);
         project.getDependencies().add(e2e.getRuntimeOnlyConfigurationName(), "org.junit.jupiter:junit-jupiter-engine:6.0.0");
         project.getDependencies().add(e2e.getRuntimeOnlyConfigurationName(), "org.junit.platform:junit-platform-launcher:6.0.0");
+        project.getDependencies().add(e2e.getImplementationConfigurationName(),
+                project.getDependencies().platform("io.cucumber:cucumber-bom:8.0.2"));
+        project.getDependencies().add(e2e.getImplementationConfigurationName(), "io.cucumber:cucumber-java");
+        project.getDependencies().add(e2e.getImplementationConfigurationName(),
+                extension.getCucumberDependencyInjection().map(value -> switch (value.toLowerCase(java.util.Locale.ROOT)) {
+                    case "pico" -> "io.cucumber:cucumber-picocontainer";
+                    case "spring" -> "com.xq:jvm-test-kit-spring:" + JVM_TEST_KIT_VERSION;
+                    default -> throw new org.gradle.api.GradleException(
+                            "jvmTestKitService.cucumberDependencyInjection must be 'pico' or 'spring'");
+                }));
+        project.getDependencies().add(e2e.getRuntimeOnlyConfigurationName(), "io.cucumber:cucumber-junit-platform-engine");
+        project.getDependencies().add(e2e.getRuntimeOnlyConfigurationName(), "org.junit.platform:junit-platform-console:1.14.0");
     }
 
     private static void configureTasks(Project project, JvmTestKitServiceExtension extension) {
@@ -95,10 +108,22 @@ public final class ServicePluginConfigurer {
             task.getOutputs().upToDateWhen(ignored -> false);
         });
 
+        TaskProvider<org.gradle.api.tasks.JavaExec> cucumberE2eTest = project.getTasks().register(
+                "cucumberE2eTest", org.gradle.api.tasks.JavaExec.class, task -> {
+                    task.setDescription("Runs Cucumber features through the standard JUnit Platform Console Launcher.");
+                    task.setGroup("verification");
+                    task.dependsOn(project.getTasks().named(e2e.getClassesTaskName()));
+                    task.setClasspath(e2e.getRuntimeClasspath());
+                    task.getMainClass().set("org.junit.platform.console.ConsoleLauncher");
+                    task.args("--scan-class-path", "--include-engine", "cucumber");
+                    task.getSystemProperties().putAll(project.getProviders().systemPropertiesPrefixedBy("cucumber.").get());
+                }
+        );
+
         project.getTasks().register("e2e", DefaultTask.class, task -> {
             task.setDescription("Runs end-to-end tests against the configured service URI.");
             task.setGroup("verification");
-            task.dependsOn(e2eTest);
+            task.dependsOn(e2eTest, cucumberE2eTest);
         });
 
         TaskProvider<ValidateJvmTestKitServiceConfigurationTask> validate = project.getTasks().register(

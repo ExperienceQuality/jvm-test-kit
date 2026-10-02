@@ -25,6 +25,7 @@ repository="$(cd "$staging_root/repository" && pwd)"
 if [[ "$product" == "all" || "$product" == "library" ]]; then
   ./gradlew --no-daemon \
     :test-kit:publishMavenJavaPublicationToTestRepository \
+    :spring-adapter:publishMavenJavaPublicationToTestRepository \
     :test-kit:cyclonedxBom \
     -PreleaseVersion="$version" \
     -PtestRepository="$repository"

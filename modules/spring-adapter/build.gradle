@@ -1,0 +1,108 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'com.xq'
+version = providers.gradleProperty('releaseVersion')
+        .orElse(providers.environmentVariable('RELEASE_VERSION'))
+        .orElse('3.0.0-dev')
+        .get()
+
+base {
+    archivesName = 'jvm-test-kit-spring'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withSourcesJar()
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'GitHubPackages'
+        url = uri('https://maven.pkg.github.com/ExperienceQuality/jvm-test-kit')
+        content { includeGroup 'com.xq' }
+        credentials {
+            username = providers.environmentVariable('GITHUB_ACTOR').orNull
+            password = providers.environmentVariable('GITHUB_TOKEN').orNull
+        }
+    }
+}
+
+def testRepositoryPath = providers.gradleProperty('testRepository').orNull
+def testRepositoryDirectory = testRepositoryPath == null
+        ? layout.buildDirectory.dir('test-repository').get().asFile
+        : file(testRepositoryPath)
+
+dependencies {
+    api project(':test-kit')
+    api platform('io.cucumber:cucumber-bom:8.0.2')
+    api 'io.cucumber:cucumber-spring'
+    api platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
+    api 'org.springframework.boot:spring-boot-test'
+    api 'org.springframework:spring-test'
+
+    testImplementation platform('org.junit:junit-bom:6.0.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.register('verifyReleaseVersion') {
+    doLast {
+        String candidate = project.version.toString()
+        if (!(candidate ==~ /\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?/) || candidate.endsWith('-SNAPSHOT')) {
+            throw new GradleException("releaseVersion must be immutable SemVer: ${candidate}")
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifactId = 'jvm-test-kit-spring'
+            pom {
+                name = 'XQ JVM Test Kit Spring Cucumber Adapter'
+                description = 'Optional Spring object-factory adapter for XQ Cucumber scenarios'
+                url = 'https://github.com/ExperienceQuality/jvm-test-kit'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/ExperienceQuality/jvm-test-kit.git'
+                    developerConnection = 'scm:git:ssh://github.com/ExperienceQuality/jvm-test-kit.git'
+                    url = 'https://github.com/ExperienceQuality/jvm-test-kit'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = 'Test'
+            url = testRepositoryDirectory
+        }
+        maven {
+            name = 'GitHubPackages'
+            url = uri('https://maven.pkg.github.com/ExperienceQuality/jvm-test-kit')
+            credentials {
+                username = providers.environmentVariable('GITHUB_ACTOR').orNull
+                password = providers.environmentVariable('GITHUB_TOKEN').orNull
+            }
+        }
+    }
+}
+
+tasks.withType(PublishToMavenRepository).configureEach {
+    dependsOn tasks.named('verifyReleaseVersion')
+}
+
+tasks.test {
+    useJUnitPlatform()
+}

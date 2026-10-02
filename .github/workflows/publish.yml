@@ -88,6 +88,9 @@ jobs:
           ./gradlew --no-daemon -p fixtures/clean-consumer clean check \
             -PkitVersion="$VERSION" \
             -PtestRepository="https://maven.pkg.github.com/${GITHUB_REPOSITORY}"
+          ./gradlew --no-daemon -p fixtures/spring-consumer clean check \
+            -PkitVersion="$VERSION" \
+            -PtestRepository="https://maven.pkg.github.com/${GITHUB_REPOSITORY}"
       - name: Verify published plugin marker through remote resolution
         if: ${{ inputs.product == 'plugin' }}
         env:
@@ -105,4 +108,3 @@ jobs:
           echo '### Publication rollback' >> "$GITHUB_STEP_SUMMARY"
           echo 'Published Maven bytes are immutable: never overwrite or delete them.' >> "$GITHUB_STEP_SUMMARY"
           echo 'Keep consumers pinned to the preceding known-good product version, then issue a corrected new version.' >> "$GITHUB_STEP_SUMMARY"
-

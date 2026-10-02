@@ -1,6 +1,7 @@
 rootProject.name = 'jvm-test-kit'
 
-include 'test-kit', 'service-plugin'
+include 'test-kit', 'service-plugin', 'spring-adapter'
 
 project(':test-kit').projectDir = file('modules/test-kit')
 project(':service-plugin').projectDir = file('modules/service-plugin')
+project(':spring-adapter').projectDir = file('modules/spring-adapter')

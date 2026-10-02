@@ -42,6 +42,7 @@ class ServiceConventionsPluginTest {
         assertEquals(SUCCESS, result.task(":packageService").getOutcome());
         assertTrue(Files.isRegularFile(projectDirectory.resolve("build/service/sample-service.jar")));
         assertTrue(result.getOutput().contains("e2eTest"));
+        assertTrue(result.getOutput().contains("cucumberE2eTest"));
         assertTrue(result.getOutput().contains("startE2eService"));
         assertTrue(result.getOutput().contains("stopE2eService"));
         assertTrue(result.getOutput().contains("bootBuildImage"));

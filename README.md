@@ -10,6 +10,7 @@ directories.
 | Product | Source | Public identity | Version input | Release tag |
 | --- | --- | --- | --- | --- |
 | JVM Test Kit | [`modules/test-kit`](modules/test-kit/README.md) | `com.xq:jvm-test-kit:<version>` | `releaseVersion` | `vMAJOR.MINOR.PATCH` |
+| JVM Test Kit Spring Adapter | [`docs/cucumber-spring.md`](docs/cucumber-spring.md) | `com.xq:jvm-test-kit-spring:<version>` | `releaseVersion` | `vMAJOR.MINOR.PATCH` |
 | Service Gradle Plugin | [`modules/service-plugin`](modules/service-plugin/README.md) | plugin `com.xq.jvm-test-kit.service-plugin`; implementation `com.xq.jvm-test-kit:service-plugin:<version>` | `pluginVersion` | `plugin-vMAJOR.MINOR.PATCH` |
 
 A library release never implies a plugin release, and a plugin release never
@@ -53,7 +54,7 @@ Run the complete repository gate:
 Run one product independently:
 
 ```bash
-./gradlew --no-daemon :test-kit:check -PreleaseVersion=2.0.0-test
+./gradlew --no-daemon :test-kit:check :spring-adapter:check -PreleaseVersion=2.0.0-test
 ./gradlew --no-daemon :service-plugin:test :service-plugin:validatePlugins \
   -PpluginVersion=0.1.0-test
 ```

@@ -16,4 +16,7 @@ public abstract class JvmTestKitServiceExtension {
     public abstract ListProperty<String> getJvmArgs();
 
     public abstract MapProperty<String, String> getEnvironment();
+
+    /** Cucumber glue dependency-injection backend: {@code pico} (default) or {@code spring}. */
+    public abstract Property<String> getCucumberDependencyInjection();
 }
