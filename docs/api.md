@@ -55,6 +55,30 @@ bodies or header values.
 
 ## Safety defaults
 
+## Public API reference
+
+`RestApi` exposes `get(path)`, `get(path, request)`, `post(path, request)`, and
+`put(path, request)`. `RestRequest.empty()` creates an empty immutable request;
+`RestRequest.builder()` supports `header`, `headers`, `jsonBody`, and `build`.
+Headers reject blank names and line breaks. `body()` returns a defensive copy.
+
+`RestResponse` exposes `statusCode()`, immutable `headers()`, defensive-copy
+`body()`, `bodyUtf8()`, `bodyAs(Charset)`, and `should()`. Assertions support
+`hasStatus`, `hasHeader(name)`, `hasHeader(name, value)`, `hasEmptyBody`,
+`hasBody`, `hasJsonBody`, `containsJson`, `hasJsonPathValue`, and
+`containsJsonAtPath`. Exact JSON uses JsonUnit comparison; containment allows
+extra object fields and array items while ignoring array order.
+
+Database consumers configure named JDBC clients with `xq.database.<name>.url`,
+`.username`, and `.password`. `Xq.db().get(name)` returns a scoped
+`DatabaseClient`; `withConnection` closes its connection and `transaction`
+commits success or rolls back failure. `DatabaseRegistry.names()` lists names,
+and `close()` closes all clients. Consumer supplies the JDBC driver.
+
+The test-kit module also exports Cucumber integration: `XqCucumberContext`,
+`XqCucumberHooks`, `XqCucumberPlugin`, `XqJsonTable`, and JSON-table helpers.
+Spring adapter consumers use the separate `jvm-test-kit-spring` artifact.
+
 ## Database clients
 
 Named JDBC clients use `xq.database.<name>.url`, `.username`, and `.password`
