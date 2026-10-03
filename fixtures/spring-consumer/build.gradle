@@ -14,12 +14,14 @@ repositories {
             maven {
                 name = 'JvmTestKitTestRepository'
                 url = uri(testRepository.get())
-                authentication {
-                    basic(BasicAuthentication)
-                }
-                credentials {
-                    username = providers.environmentVariable('GITHUB_ACTOR').orNull
-                    password = providers.environmentVariable('GITHUB_TOKEN').orNull
+                if (url.scheme in ['http', 'https']) {
+                    credentials {
+                        username = providers.environmentVariable('GITHUB_ACTOR').orNull
+                        password = providers.environmentVariable('GITHUB_TOKEN').orNull
+                    }
+                    authentication {
+                        basic(BasicAuthentication)
+                    }
                 }
             }
         }
