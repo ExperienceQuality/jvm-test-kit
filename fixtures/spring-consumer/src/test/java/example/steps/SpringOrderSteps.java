@@ -1,8 +1,9 @@
 package example.steps;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xq.jvmtestkit.cucumber.XqJsonTable;
 import example.support.CompanyOrderApi;
+import com.xq.jvmtestkit.rest.RestResponse;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -16,9 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SpringOrderSteps {
-    private static final ObjectMapper JSON = new ObjectMapper();
     private final CompanyOrderApi companyApi;
-    private int status;
+    private RestResponse response;
 
     public SpringOrderSteps(CompanyOrderApi companyApi) {
         this.companyApi = companyApi;
@@ -29,23 +29,33 @@ public class SpringOrderSteps {
         companyApi.start();
     }
 
-    @When("I submit an order through the company utility")
+    @When("I submit an order through the company utility and it is accepted")
     public void submitOrder() {
-        status = companyApi.submit().statusCode();
+        response = companyApi.submit();
+        response.should().hasStatus(201);
     }
 
-    @Then("the API receives the order and the company scenario context is active")
-    public void verifyOrderAndContext() throws IOException {
-        assertEquals(201, status);
-        JsonNode sent = JSON.readTree(companyApi.receivedBody());
-        assertEquals("spring-customer", sent.at("/customer/id").asText());
-        assertEquals("SKU-S", sent.at("/items/0/sku").asText());
-        assertEquals("submit a request through the Spring-managed company API utility",
+    @Then("the created order response includes:")
+    public void verifyOrderResponse(DataTable table) {
+        response.should()
+                .hasJsonPathValue("$.status", "accepted")
+                .containsJson(XqJsonTable.compose(table));
+        assertEquals("submit a request and assert its response through Spring-managed company utilities",
                 companyApi.context().scenario().name());
         assertEquals("127.0.0.1", companyApi.context().baseUri().getHost());
         assertFalse(companyApi.context().runId().isBlank());
         assertNotNull(companyApi.context());
         assertTrue(companyApi.receivedBody().contains("spring-customer"));
+    }
+
+    @Then("its customer details contain:")
+    public void verifyCustomerDetails(DataTable table) {
+        response.should().containsJsonAtPath("$.customer", XqJsonTable.compose(table));
+    }
+
+    @Then("its returned items include:")
+    public void verifyReturnedItems(DataTable table) {
+        response.should().containsJsonAtPath("$.items", XqJsonTable.compose(table));
     }
 
     @After

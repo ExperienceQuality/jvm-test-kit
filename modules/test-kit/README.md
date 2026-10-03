@@ -110,9 +110,26 @@ void submitOrders(DataTable table) {
 }
 ```
 
-For Spring applications, Cucumber has a separate Spring object factory. The
-current kit uses PicoContainer; see the [Spring integration research note](../../docs/cucumber-spring.md)
-before adding another Cucumber DI module.
+Reuse the same composer for response assertions. `containsJson` permits extra
+object fields and array items and ignores array order; `containsJsonAtPath`
+applies those partial-match rules to a JSON path. Use `hasJsonBody` or
+`hasJsonPathValue` when the full document or selected subtree must match exactly
+(including array order and length):
+
+```java
+response.should().containsJson(XqJsonTable.compose(responseTable));
+response.should().containsJsonAtPath("$.items", XqJsonTable.compose(itemsTable));
+response.should().hasJsonPathValue("$.status", "accepted");
+```
+
+All table values retain JSON types: `true`, `null`, and numeric literals are
+not strings. A missing path, `null`, a wrong scalar type, and a mismatched
+array are distinct failures. Assertion messages redact response bodies.
+`fixtures/clean-consumer` demonstrates Pico steps and
+`fixtures/spring-consumer` demonstrates Spring-managed company utilities; both
+use business-language steps rather than generic framework REST steps. The
+[Spring integration guide](../../docs/cucumber-spring.md) explains the optional
+Spring object factory.
 
 ## Verify and stage
 

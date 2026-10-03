@@ -53,7 +53,11 @@ public class CompanyOrderApi {
 
     private void receive(HttpExchange exchange) throws IOException {
         receivedBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-        byte[] response = "{\"accepted\":true}".getBytes(StandardCharsets.UTF_8);
+        byte[] response = ("{\"id\":\"spring-order-1\",\"status\":\"accepted\","
+                + "\"customer\":{\"id\":\"spring-customer\",\"name\":\"Rowan\",\"vip\":false},"
+                + "\"items\":[{\"sku\":\"SKU-S\",\"quantity\":1},{\"sku\":\"SKU-T\",\"quantity\":3}],"
+                + "\"metadata\":{\"source\":\"spring-demo\",\"traceId\":\"private-spring-trace\"}}")
+                .getBytes(StandardCharsets.UTF_8);
         exchange.sendResponseHeaders(201, response.length);
         exchange.getResponseBody().write(response);
         exchange.close();

@@ -69,4 +69,19 @@ public final class RestResponseAssert extends AbstractAssert<RestResponseAssert,
         catch (AssertionError error) { failWithMessage("expected JSON path <%s> to match; status=%s; body=<redacted:%s bytes>", path, actual.statusCode(), actual.body().length); }
         return this;
     }
+
+    /** Asserts that a JSON path contains the supplied structure, allowing extra object fields and array items. */
+    public RestResponseAssert containsJsonAtPath(String path, Object expected) {
+        isNotNull();
+        try {
+            JsonAssertions.assertThatJson(actual.bodyUtf8())
+                    .when(IGNORING_EXTRA_FIELDS, IGNORING_EXTRA_ARRAY_ITEMS, IGNORING_ARRAY_ORDER)
+                    .inPath(path)
+                    .isEqualTo(expected);
+        } catch (AssertionError error) {
+            failWithMessage("expected JSON path <%s> to contain supplied structure; status=%s; body=<redacted:%s bytes>",
+                    path, actual.statusCode(), actual.body().length);
+        }
+        return this;
+    }
 }
