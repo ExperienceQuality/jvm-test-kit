@@ -51,7 +51,7 @@ jobs:
             *) echo "Only one independently versioned product may be published" >&2; exit 1 ;;
           esac
           test "$TAG_NAME" = "$expected_tag"
-          git fetch origin main --depth=1
+          git fetch origin main
           git merge-base --is-ancestor "$COMMIT" origin/main
       - name: Download immutable staging artifact
         uses: actions/download-artifact@v4
