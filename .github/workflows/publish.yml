@@ -24,8 +24,6 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment:
-      name: release
     permissions:
       actions: read
       attestations: write
