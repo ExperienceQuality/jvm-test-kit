@@ -26,6 +26,8 @@ product they use.
 - [Architecture](docs/architecture.md): module ownership, public boundaries,
   root compatibility facade, and runtime flow.
 - [Library API](docs/api.md): detailed JVM Test Kit behavior.
+- [Consumer guide](docs/consumer-guide.md): dependencies, Cucumber setup,
+  response tables, and optional Spring integration.
 - [CI and release contract](docs/ci-cd.md): immutable staging, tag routing,
   permissions, verification, and rollback.
 
