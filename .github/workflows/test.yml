@@ -69,9 +69,12 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
         run: |
-          ./gradlew --no-daemon :test-kit:check -PreleaseVersion="$VERSION"
+          ./gradlew --no-daemon :test-kit:check :spring-adapter:check -PreleaseVersion="$VERSION"
           test -s build/reports/japicmp/report.txt
           ./gradlew --no-daemon -p fixtures/clean-consumer clean check \
+            -PkitVersion="$VERSION" \
+            -PtestRepository="$GITHUB_WORKSPACE/.ci-staging/repository"
+          ./gradlew --no-daemon -p fixtures/spring-consumer clean check \
             -PkitVersion="$VERSION" \
             -PtestRepository="$GITHUB_WORKSPACE/.ci-staging/repository"
       - name: Test plugin against staged marker and implementation
@@ -89,7 +92,8 @@ jobs:
           for entry in \
             'build/test-results:.ci-evidence/test-results/library' \
             'modules/service-plugin/build/test-results:.ci-evidence/test-results/plugin' \
-            'fixtures/clean-consumer/build/test-results:.ci-evidence/test-results/consumer'; do
+            'fixtures/clean-consumer/build/test-results:.ci-evidence/test-results/consumer-pico' \
+            'fixtures/spring-consumer/build/test-results:.ci-evidence/test-results/consumer-spring'; do
             source="${entry%%:*}"
             destination="${entry#*:}"
             if [[ -d "$source" ]]; then

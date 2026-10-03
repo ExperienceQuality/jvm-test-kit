@@ -8,8 +8,9 @@ contract.
 
 | Boundary | Owns | Does not own |
 | --- | --- | --- |
-| `modules/test-kit` | `com.xq:jvm-test-kit`, JUnit lifecycle, REST client values and assertions, compatibility report, SBOM | Service process startup, service builds, infrastructure |
-| `modules/service-plugin` | Plugin ID and marker, `jvmTestKitService` DSL, Java/Spring conventions, packaging and owned-process tasks | Test-kit public Java API, databases, containers, deployment |
+| `modules/test-kit` | `com.xq:jvm-test-kit`, Jupiter and Cucumber scenario lifecycle, REST client values and assertions, compatibility report, SBOM | Service process startup, service builds, infrastructure |
+| `modules/spring-adapter` | Optional `com.xq:jvm-test-kit-spring`; scenario-scoped company context and Spring Cucumber object factory integration | Default DI selection, AUT Spring context, Pico integration |
+| `modules/service-plugin` | Plugin ID and marker, `jvmTestKitService` DSL, Java/Spring conventions, Cucumber/Jupiter E2E tasks, packaging and owned-process tasks | Test-kit public Java API, databases, containers, deployment |
 | Root build | Module inclusion, aggregate `clean`/`assemble`/`check`, `verifyAll`, legacy library task facade | Product source or independent version selection |
 | `fixtures/clean-consumer` | External resolution proof for the staged library | Published production code |
 | `ci` and `.github/workflows` | Immutable staging, evidence, promotion, release routing | Product behavior |
@@ -47,8 +48,11 @@ The ownership record binds the PID to launch identity and JAR path.
 foreign live PID. Failure paths perform bounded cleanup and preserve the
 thread's interrupt status.
 
-The `e2eTest` task is separate from process management: callers decide when to
-start and stop the service and any external infrastructure.
+The `e2eTest` and `cucumberE2eTest` tasks are separate from process management:
+callers decide when to start and stop the service and any external
+infrastructure. Cucumber runs through its JUnit Platform engine and the
+standard Console Launcher. Consumer `junit-platform.properties` owns glue and
+plugin configuration so IDEs and Gradle use the same Cucumber engine setup.
 
 ## Compatibility
 

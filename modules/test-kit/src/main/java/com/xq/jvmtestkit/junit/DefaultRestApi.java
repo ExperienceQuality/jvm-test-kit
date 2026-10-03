@@ -15,7 +15,7 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-final class DefaultRestApi implements RestApi, AutoCloseable {
+public final class DefaultRestApi implements RestApi, AutoCloseable {
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
     private static final int MAX_REQUEST_BYTES = 2 * 1024 * 1024;
     private static final int MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
