@@ -9,6 +9,11 @@ on:
       - 'v*.*.*'
       - 'plugin-v*.*.*'
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag to build and publish
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -26,29 +31,45 @@ jobs:
       product: ${{ steps.route.outputs.product }}
       release: ${{ steps.route.outputs.release }}
       version: ${{ steps.route.outputs.version }}
+      commit: ${{ steps.route.outputs.commit }}
+      tag: ${{ steps.route.outputs.tag }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - id: route
         name: Route independent product release tags
         env:
           REF_NAME: ${{ github.ref_name }}
           REF_TYPE: ${{ github.ref_type }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          if [[ "$REF_TYPE" != tag ]]; then
-            echo 'product=all' >> "$GITHUB_OUTPUT"
-            echo 'release=false' >> "$GITHUB_OUTPUT"
-            echo "version=0.0.0-ci.${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
-          elif [[ "$REF_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+          TAG_NAME="$REF_NAME"
+          if [[ -n "$RELEASE_TAG" ]]; then TAG_NAME="$RELEASE_TAG"; fi
+          if [[ "$TAG_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             echo 'product=library' >> "$GITHUB_OUTPUT"
             echo 'release=true' >> "$GITHUB_OUTPUT"
             echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
-          elif [[ "$REF_NAME" =~ ^plugin-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+          elif [[ "$TAG_NAME" =~ ^plugin-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             echo 'product=plugin' >> "$GITHUB_OUTPUT"
             echo 'release=true' >> "$GITHUB_OUTPUT"
             echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          elif [[ "$REF_TYPE" != tag && -z "$RELEASE_TAG" ]]; then
+            echo 'product=all' >> "$GITHUB_OUTPUT"
+            echo 'release=false' >> "$GITHUB_OUTPUT"
+            echo "version=0.0.0-ci.${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
           else
-            echo "Unsupported release tag: $REF_NAME" >&2
+            echo "Unsupported release tag: $TAG_NAME" >&2
             exit 1
           fi
+          if [[ -n "$RELEASE_TAG" ]]; then
+            git fetch origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
+            COMMIT="$(git rev-list -n1 "$RELEASE_TAG")"
+          else
+            COMMIT="$GITHUB_SHA"
+          fi
+          echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG_NAME" >> "$GITHUB_OUTPUT"
 
   build:
     needs: route
@@ -58,7 +79,7 @@ jobs:
     with:
       product: ${{ needs.route.outputs.product }}
       version: ${{ needs.route.outputs.version }}
-      commit: ${{ github.sha }}
+      commit: ${{ needs.route.outputs.commit }}
 
   test:
     needs: [route, build]
@@ -70,7 +91,7 @@ jobs:
     with:
       product: ${{ needs.route.outputs.product }}
       version: ${{ needs.route.outputs.version }}
-      commit: ${{ github.sha }}
+      commit: ${{ needs.route.outputs.commit }}
       artifact_name: ${{ needs.build.outputs.artifact_name }}
 
   publish:
@@ -86,7 +107,8 @@ jobs:
     with:
       product: ${{ needs.route.outputs.product }}
       version: ${{ needs.route.outputs.version }}
-      commit: ${{ github.sha }}
+      commit: ${{ needs.route.outputs.commit }}
+      tag: ${{ needs.route.outputs.tag }}
       artifact_name: ${{ needs.build.outputs.artifact_name }}
 
   deploy:
@@ -114,7 +136,7 @@ jobs:
           PRODUCT: ${{ needs.route.outputs.product }}
           VERSION: ${{ needs.route.outputs.version }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
+          gh release create "${{ needs.route.outputs.tag }}" \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
             --generate-notes \

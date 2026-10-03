@@ -16,6 +16,9 @@ on:
       artifact_name:
         required: true
         type: string
+      tag:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -40,14 +43,14 @@ jobs:
           COMMIT: ${{ inputs.commit }}
           PRODUCT: ${{ inputs.product }}
           VERSION: ${{ inputs.version }}
+          TAG_NAME: ${{ inputs.tag }}
         run: |
           case "$PRODUCT" in
             library) expected_tag="v$VERSION" ;;
             plugin) expected_tag="plugin-v$VERSION" ;;
             *) echo "Only one independently versioned product may be published" >&2; exit 1 ;;
           esac
-          test "$GITHUB_REF_TYPE" = tag
-          test "$GITHUB_REF_NAME" = "$expected_tag"
+          test "$TAG_NAME" = "$expected_tag"
           test "$GITHUB_SHA" = "$COMMIT"
           git fetch origin main --depth=1
           git merge-base --is-ancestor "$COMMIT" origin/main
