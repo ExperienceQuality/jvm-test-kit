@@ -5,7 +5,7 @@ plugins {
 group = 'com.xq'
 version = providers.gradleProperty('releaseVersion')
         .orElse(providers.environmentVariable('RELEASE_VERSION'))
-        .orElse('2.0.0-dev')
+        .orElse('3.0.0-dev')
         .get()
 
 description = 'Aggregates the JVM Test Kit library and service Gradle plugin.'
