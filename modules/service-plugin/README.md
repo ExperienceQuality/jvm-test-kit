@@ -94,7 +94,7 @@ extension, JVM arguments, source, or Gradle properties.
 | `packageService` | Runs `bootJar` and copies the result to `build/service/<artifactName>`. |
 | `ci` | Runs `check` and `packageService`. |
 | `e2eTest` | Runs Jupiter tests in `src/e2e` against a service managed by the caller. |
-| `cucumberE2eTest` | Runs Cucumber features with the JUnit Platform Console Launcher and Cucumber engine. Forwards Gradle process `cucumber.*` system properties. |
+| `cucumberE2eTest` | Runs Cucumber features with Gradle's `Test` task and the Cucumber JUnit Platform engine. Forwards Gradle process `cucumber.*` system properties. |
 | `e2e` | Runs both `e2eTest` and `cucumberE2eTest`. |
 | `startE2eService` | Packages and starts the JAR, records PID plus launch identity, writes `build/application.log`, and waits for health. |
 | `stopE2eService` | Stops only a live process whose PID and recorded launch identity match the packaged JAR. |
