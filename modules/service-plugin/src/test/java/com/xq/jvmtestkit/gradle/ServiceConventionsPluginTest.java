@@ -49,6 +49,43 @@ class ServiceConventionsPluginTest {
     }
 
     @Test
+    void exposesCucumberRunnerAsGradleTestTask() throws IOException {
+        writeSettings();
+        writeBuild("""
+                import org.gradle.api.tasks.testing.Test
+
+                plugins {
+                    id 'com.xq.jvm-test-kit.service-plugin'
+                }
+
+                configurations.configureEach {
+                    exclude group: 'com.xq', module: 'jvm-test-kit'
+                }
+
+                tasks.named('cucumberE2eTest', Test)
+                """);
+        writeMain(simpleMain());
+        writeE2eCucumberFixture();
+
+        BuildResult result = pluginClasspathRunner("cucumberE2eTest").build();
+
+        assertEquals(SUCCESS, result.task(":cucumberE2eTest").getOutcome());
+        Path testResults = projectDirectory.resolve("build/test-results/cucumberE2eTest");
+        try (var results = Files.walk(testResults)) {
+            assertTrue(results
+                    .filter(path -> path.toString().endsWith(".xml"))
+                    .map(path -> {
+                        try {
+                            return Files.readString(path);
+                        } catch (IOException exception) {
+                            throw new IllegalStateException(exception);
+                        }
+                    })
+                    .anyMatch(xml -> xml.contains("<testcase")));
+        }
+    }
+
+    @Test
     void rejectsUnsafeArtifactName() throws IOException {
         writeSettings();
         writeBuild("""
@@ -412,6 +449,33 @@ class ServiceConventionsPluginTest {
         Path sourceDirectory = projectDirectory.resolve("src/main/java/example");
         Files.createDirectories(sourceDirectory);
         Files.writeString(sourceDirectory.resolve("Application.java"), source);
+    }
+
+    private void writeE2eCucumberFixture() throws IOException {
+        Path stepDirectory = projectDirectory.resolve("src/e2e/java/example");
+        Files.createDirectories(stepDirectory);
+        Files.writeString(stepDirectory.resolve("SmokeSteps.java"), """
+                package example;
+
+                import io.cucumber.java.en.Given;
+
+                public final class SmokeSteps {
+                    @Given("a passing step")
+                    public void passingStep() {
+                    }
+                }
+                """);
+
+        Path resourceDirectory = projectDirectory.resolve("src/e2e/resources");
+        Files.createDirectories(resourceDirectory.resolve("features"));
+        Files.writeString(resourceDirectory.resolve("junit-platform.properties"),
+                "cucumber.glue=example\ncucumber.features=classpath:features\n");
+        Files.writeString(resourceDirectory.resolve("features/smoke.feature"), """
+                Feature: smoke
+
+                  Scenario: passing
+                    Given a passing step
+                """);
     }
 
     private static String simpleMain() {

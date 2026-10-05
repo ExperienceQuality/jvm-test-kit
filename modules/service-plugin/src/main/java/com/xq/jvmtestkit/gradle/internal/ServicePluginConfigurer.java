@@ -91,7 +91,6 @@ public final class ServicePluginConfigurer {
                             "jvmTestKitService.cucumberDependencyInjection must be 'pico' or 'spring'");
                 }));
         project.getDependencies().add(e2e.getRuntimeOnlyConfigurationName(), "io.cucumber:cucumber-junit-platform-engine");
-        project.getDependencies().add(e2e.getRuntimeOnlyConfigurationName(), "org.junit.platform:junit-platform-console:1.14.0");
     }
 
     private static void configureTasks(Project project, JvmTestKitServiceExtension extension) {
@@ -108,15 +107,16 @@ public final class ServicePluginConfigurer {
             task.getOutputs().upToDateWhen(ignored -> false);
         });
 
-        TaskProvider<org.gradle.api.tasks.JavaExec> cucumberE2eTest = project.getTasks().register(
-                "cucumberE2eTest", org.gradle.api.tasks.JavaExec.class, task -> {
-                    task.setDescription("Runs Cucumber features through the standard JUnit Platform Console Launcher.");
+        TaskProvider<Test> cucumberE2eTest = project.getTasks().register(
+                "cucumberE2eTest", Test.class, task -> {
+                    task.setDescription("Runs Cucumber features through the standard JUnit Platform engine.");
                     task.setGroup("verification");
                     task.dependsOn(project.getTasks().named(e2e.getClassesTaskName()));
+                    task.setTestClassesDirs(e2e.getOutput().getClassesDirs());
                     task.setClasspath(e2e.getRuntimeClasspath());
-                    task.getMainClass().set("org.junit.platform.console.ConsoleLauncher");
-                    task.args("--scan-class-path", "--include-engine", "cucumber");
+                    task.useJUnitPlatform(options -> options.includeEngines("cucumber"));
                     task.getSystemProperties().putAll(project.getProviders().systemPropertiesPrefixedBy("cucumber.").get());
+                    task.getOutputs().upToDateWhen(ignored -> false);
                 }
         );
 
