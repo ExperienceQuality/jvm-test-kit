@@ -69,6 +69,10 @@ dependencies {
     api platform('io.cucumber:cucumber-bom:8.0.2')
     api 'io.cucumber:cucumber-java'
     api 'io.cucumber:cucumber-plugin'
+    compileOnly platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
+    compileOnly 'io.cucumber:cucumber-spring'
+    compileOnly 'org.springframework.boot:spring-boot-test'
+    compileOnly 'org.springframework:spring-test'
     api platform('org.junit:junit-bom:6.0.0')
     api 'org.junit.jupiter:junit-jupiter-api'
 
@@ -80,6 +84,10 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-params'
     testImplementation 'org.junit.platform:junit-platform-launcher'
     testImplementation platform('io.cucumber:cucumber-bom:8.0.2')
+    testImplementation 'io.cucumber:cucumber-spring'
+    testImplementation platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
+    testImplementation 'org.springframework.boot:spring-boot-test'
+    testImplementation 'org.springframework:spring-test'
 
     japicmpBaseline 'com.xq:jvm-test-kit:2.0.0'
 }

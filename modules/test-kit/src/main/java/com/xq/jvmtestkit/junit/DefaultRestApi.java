@@ -75,7 +75,8 @@ public final class DefaultRestApi implements RestApi, AutoCloseable {
         request.headers().forEach((name, values) -> values.forEach(value -> builder.header(name, value)));
 
         try {
-            HttpResponse<InputStream> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofInputStream());
+            HttpResponse<InputStream> response =
+                    client.send(builder.build(), HttpResponse.BodyHandlers.ofInputStream());
             return new RestResponse(
                     response.statusCode(),
                     response.headers().map(),

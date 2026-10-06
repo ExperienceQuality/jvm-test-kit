@@ -24,6 +24,38 @@ Use this skill when adding or changing service E2E tests that consume
 - Use `Xq.rest()` only inside the active test invocation. Do not construct `RestApiConfig`.
 - Keep service-specific payloads and scenarios in the consumer repository.
 
+## Greenfield Cucumber setup
+
+- For consumers using `com.xq.jvm-test-kit.service-plugin`, configure the
+  `jvmTestKitService` extension before generating files:
+
+  ```groovy
+  jvmTestKitService {
+      cucumberPackage = 'com.example.acceptance'
+      cucumberGlue = ['com.example.steps']
+  }
+  ```
+
+- Run `./gradlew initJvmTestKitSpringCucumber` to create the Spring bootstrap
+  under `src/e2e/java` and patch
+  `src/e2e/resources/junit-platform.properties`.
+- The generator always retains `com.xq.jvmtestkit.cucumber` and
+  `com.xq.jvmtestkit.cucumber.XqCucumberPlugin`, merges configured glue, and
+  preserves unrelated properties.
+- The generated class extends
+  `com.xq.jvmtestkit.cucumber.spring.XqCucumberSpringConfiguration` and must
+  retain a direct `@CucumberContextConfiguration` annotation; Cucumber does
+  not inherit that marker from an abstract superclass.
+- Add consumer-owned Spring utility beans with `@ContextConfiguration` on the
+  generated class. Do not import the application-under-test context unless the
+  consumer explicitly needs that behavior.
+- The task never overwrites an existing Java configuration class. Review the
+  preserved file and update it manually when an existing project already has a
+  Spring Cucumber bootstrap.
+
+For direct consumers that do not apply the service plugin, create the same
+properties and subclass manually, following `docs/cucumber-spring.md`.
+
 ## HTTP usage
 
 - Use `RestRequest.empty()` when no headers or body are needed.
@@ -39,5 +71,8 @@ Use this skill when adding or changing service E2E tests that consume
 ## Verification
 
 - Compile the consumer E2E source set.
+- For a generated greenfield setup, run `./gradlew initJvmTestKitSpringCucumber`
+  and inspect the generated files before compiling.
+- Run `./gradlew cucumberE2eTest` or the consumer's equivalent Cucumber task.
 - Run the consumer's ordinary verification and real E2E suite.
 - Prove the pinned package resolves remotely in CI.

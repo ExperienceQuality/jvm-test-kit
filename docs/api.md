@@ -77,7 +77,7 @@ and `close()` closes all clients. Consumer supplies the JDBC driver.
 
 The test-kit module also exports Cucumber integration: `XqCucumberContext`,
 `XqCucumberHooks`, `XqCucumberPlugin`, `XqJsonTable`, and JSON-table helpers.
-Spring adapter consumers use the separate `jvm-test-kit-spring` artifact.
+Spring consumers use the Spring integration included in the `jvm-test-kit` artifact.
 
 ## Database clients
 
