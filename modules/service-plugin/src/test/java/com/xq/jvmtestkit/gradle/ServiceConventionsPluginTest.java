@@ -58,6 +58,10 @@ class ServiceConventionsPluginTest {
                     id 'com.xq.jvm-test-kit.service-plugin'
                 }
 
+                configurations.configureEach {
+                    exclude group: 'com.xq', module: 'jvm-test-kit'
+                }
+
                 tasks.named('cucumberE2eTest', Test)
                 """);
         writeMain(simpleMain());
