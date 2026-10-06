@@ -26,6 +26,5 @@ java {
 
 test {
     useJUnitPlatform()
-    environment 'XQ_TEST_BASE_URL', 'http://127.0.0.1:18082/'
     environment 'XQ_CUCUMBER_EVENTS_FILE', layout.buildDirectory.file('cucumber-events.ndjson').get().asFile.absolutePath
 }

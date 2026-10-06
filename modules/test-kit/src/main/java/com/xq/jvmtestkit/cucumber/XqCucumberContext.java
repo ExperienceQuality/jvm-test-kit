@@ -1,5 +1,6 @@
 package com.xq.jvmtestkit.cucumber;
 
+import com.xq.jvmtestkit.config.ConfigurationManager;
 import com.xq.jvmtestkit.rest.RestApi;
 import com.xq.jvmtestkit.junit.DefaultRestApi;
 
@@ -24,9 +25,9 @@ public class XqCucumberContext implements AutoCloseable {
         ensureOpen();
         scenario = new ScenarioMetadata(source.getName(), source.getUri().toString(), source.getLine(),
                 Set.copyOf(source.getSourceTagNames()));
-        String value = System.getenv("XQ_TEST_BASE_URL");
+        String value = ConfigurationManager.getTestBaseUrl();
         if (value == null || value.isBlank()) {
-            throw new IllegalStateException("Missing required environment variable XQ_TEST_BASE_URL");
+            throw new IllegalStateException("Missing required property testBaseUrl in /xq.yaml");
         }
         try {
             baseUri = normalize(URI.create(value));
