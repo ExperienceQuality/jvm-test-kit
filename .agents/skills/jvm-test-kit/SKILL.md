@@ -18,8 +18,11 @@ Use this skill when adding or changing service E2E tests that consume
 ## Configuration and JUnit lifecycle
 
 - Annotate the E2E class with `@XqTest`.
-- Add exactly one classpath-root `xq.properties` to consumer test resources.
-- Set required `xq.rest.base-uri` property. Use service-relative paths in requests.
+- Add exactly one classpath-root `xq.yaml` to consumer test resources.
+- Configure the flat dotted `xq.rest.base-uri` key in `xq.yaml`. Do not add or
+  document `xq.properties`; it is not supported. Use service-relative paths in
+  requests.
+- For Cucumber consumers, configure `testBaseUrl` in that same `xq.yaml`.
 - `@XqTest` loads configuration and creates one REST helper per test invocation.
 - Use `Xq.rest()` only inside the active test invocation. Do not construct `RestApiConfig`.
 - Keep service-specific payloads and scenarios in the consumer repository.
@@ -54,7 +57,7 @@ Use this skill when adding or changing service E2E tests that consume
   Spring Cucumber bootstrap.
 
 For direct consumers that do not apply the service plugin, create the same
-properties and subclass manually, following `docs/cucumber-spring.md`.
+`xq.yaml` resource and subclass manually, following `docs/cucumber-spring.md`.
 
 ## HTTP usage
 

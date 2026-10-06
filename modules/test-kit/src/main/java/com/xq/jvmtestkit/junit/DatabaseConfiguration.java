@@ -16,18 +16,18 @@ final class DatabaseConfiguration {
         if (loader == null) loader = DatabaseConfiguration.class.getClassLoader();
         Properties properties = new Properties();
         try {
-            Enumeration<URL> files = loader.getResources("xq.properties");
+            Enumeration<URL> files = loader.getResources("xq.yaml");
             if (!files.hasMoreElements()) return new DatabaseRegistry(Map.of());
             URL file = files.nextElement();
-            if (files.hasMoreElements()) throw new IllegalStateException("Multiple classpath configuration resources /xq.properties found");
+            if (files.hasMoreElements()) throw new IllegalStateException("Multiple classpath configuration resources /xq.yaml found");
             try (InputStream input = file.openStream()) { properties.load(input); }
-        } catch (IOException exception) { throw new IllegalStateException("Could not read /xq.properties", exception); }
+        } catch (IOException exception) { throw new IllegalStateException("Could not read /xq.yaml", exception); }
         Map<String, Map<String, String>> values = new LinkedHashMap<>();
         for (String key : properties.stringPropertyNames()) {
             if (!key.startsWith("xq.database.")) continue;
             String remainder = key.substring("xq.database.".length());
             int split = remainder.indexOf('.');
-            if (split <= 0 || split == remainder.length() - 1) throw new IllegalStateException("Invalid database property name in /xq.properties");
+            if (split <= 0 || split == remainder.length() - 1) throw new IllegalStateException("Invalid database property name in /xq.yaml");
             values.computeIfAbsent(remainder.substring(0, split), ignored -> new LinkedHashMap<>())
                     .put(remainder.substring(split + 1), resolve(properties.getProperty(key)));
         }
@@ -42,7 +42,7 @@ final class DatabaseConfiguration {
     }
     private static String required(Map<String, String> values, String database, String field) {
         String value = values.get(field);
-        if (value == null || value.isBlank()) throw new IllegalStateException("Missing xq.database." + database + "." + field + " in /xq.properties");
+        if (value == null || value.isBlank()) throw new IllegalStateException("Missing xq.database." + database + "." + field + " in /xq.yaml");
         return value;
     }
     private static String resolve(String value) {

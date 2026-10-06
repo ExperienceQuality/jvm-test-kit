@@ -8,7 +8,7 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 final class XqConfiguration {
-    private static final String RESOURCE = "xq.properties";
+    private static final String RESOURCE = "xq.yaml";
     private static final String REST_BASE_URI = "xq.rest.base-uri";
 
     private final URI restBaseUri;
@@ -24,11 +24,11 @@ final class XqConfiguration {
         try {
             Enumeration<URL> resources = loader.getResources(RESOURCE);
             if (!resources.hasMoreElements()) {
-                throw new IllegalStateException("Missing classpath configuration resource /xq.properties");
+                throw new IllegalStateException("Missing classpath configuration resource /xq.yaml");
             }
             URL resource = resources.nextElement();
             if (resources.hasMoreElements()) {
-                throw new IllegalStateException("Multiple classpath configuration resources /xq.properties found");
+                throw new IllegalStateException("Multiple classpath configuration resources /xq.yaml found");
             }
             Properties properties = new Properties();
             try (InputStream input = resource.openStream()) {
@@ -36,13 +36,13 @@ final class XqConfiguration {
             }
             String value = properties.getProperty(REST_BASE_URI);
             if (value == null || value.isBlank()) {
-                throw new IllegalStateException("Missing required property xq.rest.base-uri in /xq.properties");
+                throw new IllegalStateException("Missing required property xq.rest.base-uri in /xq.yaml");
             }
             return new XqConfiguration(normalize(URI.create(value)));
         } catch (IOException exception) {
-            throw new IllegalStateException("Could not read classpath configuration /xq.properties", exception);
+            throw new IllegalStateException("Could not read classpath configuration /xq.yaml", exception);
         } catch (IllegalArgumentException exception) {
-            throw new IllegalStateException("Invalid property xq.rest.base-uri in /xq.properties", exception);
+            throw new IllegalStateException("Invalid property xq.rest.base-uri in /xq.yaml", exception);
         }
     }
 

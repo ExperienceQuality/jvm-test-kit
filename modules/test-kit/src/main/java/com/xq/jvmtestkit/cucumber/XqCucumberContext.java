@@ -32,7 +32,7 @@ public class XqCucumberContext implements AutoCloseable {
         try {
             baseUri = normalize(URI.create(value));
         } catch (IllegalArgumentException exception) {
-            throw new IllegalStateException("Invalid environment variable XQ_TEST_BASE_URL", exception);
+            throw new IllegalStateException("Invalid property testBaseUrl in /xq.yaml", exception);
         }
     }
 

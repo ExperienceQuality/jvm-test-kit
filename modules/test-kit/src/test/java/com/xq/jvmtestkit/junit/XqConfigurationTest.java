@@ -15,8 +15,8 @@ class XqConfigurationTest {
     @Test
     void loadsAndNormalizesRequiredRestUri() throws Exception {
         Path root = Files.createTempDirectory("xq-config-");
-        Files.writeString(root.resolve("xq.properties"),
-                "xq.rest.base-uri=https://example.test/api\n");
+        Files.writeString(root.resolve("xq.yaml"),
+                "xq.rest.base-uri: https://example.test/api\n");
 
         try (URLClassLoader loader = new URLClassLoader(new URL[]{root.toUri().toURL()}, null)) {
             assertEquals("https://example.test/api/", XqConfiguration.load(loader).restBaseUri().toString());
@@ -32,16 +32,16 @@ class XqConfigurationTest {
 
         Path first = Files.createTempDirectory("xq-first-");
         Path second = Files.createTempDirectory("xq-second-");
-        Files.writeString(first.resolve("xq.properties"), "xq.rest.base-uri=http://one.test/\n");
-        Files.writeString(second.resolve("xq.properties"), "xq.rest.base-uri=http://two.test/\n");
+        Files.writeString(first.resolve("xq.yaml"), "xq.rest.base-uri: http://one.test/\n");
+        Files.writeString(second.resolve("xq.yaml"), "xq.rest.base-uri: http://two.test/\n");
         try (URLClassLoader loader = new URLClassLoader(
                 new URL[]{first.toUri().toURL(), second.toUri().toURL()}, null)) {
             assertThrows(IllegalStateException.class, () -> XqConfiguration.load(loader));
         }
 
         Path unsafe = Files.createTempDirectory("xq-unsafe-");
-        Files.writeString(unsafe.resolve("xq.properties"),
-                "xq.rest.base-uri=https://user:secret@example.test/?token=secret\n");
+        Files.writeString(unsafe.resolve("xq.yaml"),
+                "xq.rest.base-uri: https://user:secret@example.test/?token=secret\n");
         try (URLClassLoader loader = new URLClassLoader(new URL[]{unsafe.toUri().toURL()}, null)) {
             IllegalStateException failure = assertThrows(IllegalStateException.class,
                     () -> XqConfiguration.load(loader));

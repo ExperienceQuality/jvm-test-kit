@@ -72,11 +72,19 @@ cucumber.glue=com.xq.jvmtestkit.cucumber,example.steps
 cucumber.plugin=com.xq.jvmtestkit.cucumber.XqCucumberPlugin
 ```
 
-Set the service base URL in the test process:
+Set the service base URL in the consumer's classpath-root `xq.yaml`:
 
-```bash
-XQ_TEST_BASE_URL=http://127.0.0.1:8080 ./gradlew test
+```yaml
+testBaseUrl: http://127.0.0.1:8080/
 ```
+
+For `@XqTest`, use the same file with the flat dotted REST key:
+
+```yaml
+xq.rest.base-uri: http://127.0.0.1:8080/
+```
+
+The kit supports `xq.yaml` only; do not add `xq.properties`.
 
 The IDE, Maven, Gradle, or JUnit Console Launcher still discovers and runs
 Cucumber scenarios. The company kit is not a replacement runner.
@@ -175,5 +183,5 @@ include application configuration.
 Consumers own service startup, migrations, application data, feature files,
 and business steps. The kit owns scenario context, HTTP clients, fixtures,
 hooks, lifecycle events, and bounded diagnostics. Keep GitHub credentials and
-`XQ_TEST_BASE_URL` configuration in CI or local secret management, never in
+secrets referenced by `xq.yaml` in CI or local secret management, never in
 committed feature files.

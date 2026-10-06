@@ -5,16 +5,17 @@ tests with JUnit Jupiter. Version 3 loads REST configuration from consumer test 
 
 ## Configure service endpoint
 
-Consumer test resources must contain one classpath-root `xq.properties`:
+Consumer test resources must contain exactly one classpath-root `xq.yaml`.
+Use flat dotted keys in this YAML mapping:
 
-```properties
-xq.rest.base-uri=http://localhost:8080/
+```yaml
+xq.rest.base-uri: http://localhost:8080/
 ```
 
 ```java
 @XqTest
 class RoutineE2ETest {
-    // Xq.rest() reads xq.rest.base-uri from xq.properties.
+    // Xq.rest() reads xq.rest.base-uri from xq.yaml.
 }
 ```
 
@@ -69,8 +70,8 @@ Headers reject blank names and line breaks. `body()` returns a defensive copy.
 `containsJsonAtPath`. Exact JSON uses JsonUnit comparison; containment allows
 extra object fields and array items while ignoring array order.
 
-Database consumers configure named JDBC clients with `xq.database.<name>.url`,
-`.username`, and `.password`. `Xq.db().get(name)` returns a scoped
+Database consumers configure named JDBC clients in the same `xq.yaml` with
+`xq.database.<name>.url`, `.username`, and `.password`. `Xq.db().get(name)` returns a scoped
 `DatabaseClient`; `withConnection` closes its connection and `transaction`
 commits success or rolls back failure. `DatabaseRegistry.names()` lists names,
 and `close()` closes all clients. Consumer supplies the JDBC driver.
@@ -82,7 +83,7 @@ Spring consumers use the Spring integration included in the `jvm-test-kit` artif
 ## Database clients
 
 Named JDBC clients use `xq.database.<name>.url`, `.username`, and `.password`
-properties. Values may be direct values or explicit `-env VARIABLE` references.
+YAML keys. Values may be direct values or explicit `-env VARIABLE` references.
 `Xq.db().get("name")` is valid only during an active `@XqTest` invocation.
 `withConnection` scopes and closes a connection; `transaction` disables
 autocommit, commits successful callbacks, and rolls back failures. Credentials

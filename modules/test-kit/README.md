@@ -45,10 +45,11 @@ grant the consumer repository access.
 
 ## Quick start
 
-Add exactly one classpath-root `xq.properties` to consumer test resources:
+Add exactly one classpath-root `xq.yaml` to consumer test resources. The kit
+uses flat dotted YAML keys; `xq.properties` is not supported:
 
-```properties
-xq.rest.base-uri=http://127.0.0.1:8080/
+```yaml
+xq.rest.base-uri: http://127.0.0.1:8080/
 ```
 
 ```java
@@ -76,8 +77,8 @@ matching, and safety semantics.
 
 ## Cucumber scenarios
 
-For Cucumber, set `XQ_TEST_BASE_URL` in the test process. Configure company and
-application glue in consumer `junit-platform.properties`, for example:
+For Cucumber, set `testBaseUrl` in the same classpath-root `xq.yaml`. Configure
+company and application glue in consumer `junit-platform.properties`, for example:
 
 ```properties
 cucumber.glue=com.xq.jvmtestkit.cucumber,example.steps

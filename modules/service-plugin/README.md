@@ -71,7 +71,7 @@ cucumber.glue=com.xq.jvmtestkit.cucumber,example.steps
 cucumber.plugin=com.xq.jvmtestkit.cucumber.XqCucumberPlugin
 ```
 
-Set `XQ_TEST_BASE_URL` in the test process environment. Constructor-inject
+Set `testBaseUrl` in the consumer's classpath-root `xq.yaml`. Constructor-inject
 `XqCucumberContext` into step classes to access `rest()`. The company context is
 field paths as table column headers. Each data row becomes one nested JSON
 object, and multiple rows become an array. JSON literals are parsed and

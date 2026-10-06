@@ -33,12 +33,12 @@ product they use.
 
 ## Database clients
 
-Configure named JDBC clients in the consumer’s classpath-root `xq.properties`:
+Configure named JDBC clients in the consumer’s single classpath-root `xq.yaml`:
 
-```properties
-xq.database.main.url=jdbc:postgresql://127.0.0.1:5432/app
-xq.database.main.username=-env XQ_DB_USER
-xq.database.main.password=-env XQ_DB_PASSWORD
+```yaml
+xq.database.main.url: jdbc:postgresql://127.0.0.1:5432/app
+xq.database.main.username: -env XQ_DB_USER
+xq.database.main.password: -env XQ_DB_PASSWORD
 ```
 
 Inside `@XqTest`, use `Xq.db().get("main")` for scoped connections or explicit
