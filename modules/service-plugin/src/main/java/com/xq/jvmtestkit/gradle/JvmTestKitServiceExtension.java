@@ -17,4 +17,13 @@ public abstract class JvmTestKitServiceExtension {
 
     public abstract MapProperty<String, String> getEnvironment();
 
+    /** Package used for the generated Spring Cucumber bootstrap class and default glue. */
+    public abstract Property<String> getCucumberPackage();
+
+    /** Name used for the generated Spring Cucumber bootstrap class. */
+    public abstract Property<String> getCucumberSpringConfigurationClass();
+
+    /** Additional glue packages merged into generated junit-platform.properties. */
+    public abstract ListProperty<String> getCucumberGlue();
+
 }

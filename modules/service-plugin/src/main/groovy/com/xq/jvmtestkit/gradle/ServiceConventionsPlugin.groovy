@@ -5,6 +5,7 @@ import com.xq.jvmtestkit.gradle.internal.task.PackageServiceTask
 import com.xq.jvmtestkit.gradle.internal.task.StartE2eServiceTask
 import com.xq.jvmtestkit.gradle.internal.task.StopE2eServiceTask
 import com.xq.jvmtestkit.gradle.internal.task.ValidateJvmTestKitServiceConfigurationTask
+import com.xq.jvmtestkit.gradle.internal.task.GenerateJvmTestKitSpringCucumberTask
 import io.spring.gradle.dependencymanagement.DependencyManagementPlugin
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
@@ -45,6 +46,9 @@ final class ServiceConventionsPlugin implements Plugin<Project> {
         extension.startupTimeout.convention(Duration.ofSeconds(120))
         extension.jvmArgs.convention([])
         extension.environment.convention([:])
+        extension.cucumberPackage.convention('example')
+        extension.cucumberSpringConfigurationClass.convention('CucumberSpringConfiguration')
+        extension.cucumberGlue.convention(['com.xq.jvmtestkit.cucumber'])
 
         project.extensions.getByType(JavaPluginExtension).toolchain.languageVersion
                 .set(JavaLanguageVersion.of(21))
@@ -120,6 +124,20 @@ final class ServiceConventionsPlugin implements Plugin<Project> {
             description = 'Runs end-to-end tests against the configured service URI.'
             group = 'verification'
             dependsOn(e2eTest, cucumberE2eTest)
+        }
+
+        project.tasks.register('initJvmTestKitSpringCucumber', GenerateJvmTestKitSpringCucumberTask) {
+            description = 'Generates the Spring Cucumber bootstrap and patches JUnit Platform properties.'
+            group = 'build setup'
+            cucumberPackage.set(extension.cucumberPackage)
+            configurationClassName.set(extension.cucumberSpringConfigurationClass)
+            cucumberGlue.set(extension.cucumberGlue)
+            propertiesFile.set(project.layout.projectDirectory.file('src/e2e/resources/junit-platform.properties'))
+            configurationFile.set(project.layout.projectDirectory.file(
+                    extension.cucumberPackage.zip(extension.cucumberSpringConfigurationClass) { packageName, className ->
+                        "src/e2e/java/${packageName.replace('.', '/')}/${className}.java"
+                    }
+            ))
         }
 
         def validate = project.tasks.register('validateJvmTestKitServiceConfiguration',

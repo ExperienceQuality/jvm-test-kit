@@ -44,8 +44,22 @@ jvmTestKitService {
     startupTimeout = java.time.Duration.ofSeconds(120)
     jvmArgs = ['-XX:MaxRAMPercentage=75']
     environment = [SPRING_PROFILES_ACTIVE: 'e2e']
+    cucumberPackage = 'com.example.acceptance'
+    cucumberGlue = ['com.example.steps']
 }
 ```
+
+For a greenfield Spring Cucumber suite, run:
+
+```bash
+./gradlew initJvmTestKitSpringCucumber
+```
+
+The task creates `src/e2e/java/<package>/CucumberSpringConfiguration.java`
+and merges the JVM Test Kit glue and plugin into
+`src/e2e/resources/junit-platform.properties`. It preserves existing consumer
+properties and never overwrites an existing Java configuration class. Extend
+the generated class with consumer-owned `@TestConfiguration` beans when needed.
 
 The consumer compatibility suite runs with Gradle 8.14.5. The plugin selects a
 Java 21 toolchain. Cucumber features and step definitions belong under
@@ -78,6 +92,9 @@ configuration; it does not load the application-under-test context. See
 | `startupTimeout` | 120 seconds | Bounded wait for startup. |
 | `jvmArgs` | empty | Arguments passed before `-jar`. |
 | `environment` | empty | Non-secret overrides added to the inherited process environment. |
+| `cucumberPackage` | `example` | Package for the generated Spring Cucumber bootstrap and default glue. |
+| `cucumberSpringConfigurationClass` | `CucumberSpringConfiguration` | Name of the generated Spring Cucumber bootstrap class. |
+| `cucumberGlue` | `com.xq.jvmtestkit.cucumber` | Additional glue packages merged into generated properties. |
 
 Keep credentials in the inherited environment. Do not place secrets in the
 extension, JVM arguments, source, or Gradle properties.
@@ -91,6 +108,7 @@ extension, JVM arguments, source, or Gradle properties.
 | `ci` | Runs `check` and `packageService`. |
 | `e2eTest` | Runs Jupiter tests in `src/e2e` against a service managed by the caller. |
 | `cucumberE2eTest` | Runs Cucumber features with Gradle's `Test` task and the Cucumber JUnit Platform engine. Forwards Gradle process `cucumber.*` system properties. |
+| `initJvmTestKitSpringCucumber` | Generates the Spring Cucumber bootstrap class and patches the JUnit Platform properties file without overwriting consumer-owned Java configuration. |
 | `e2e` | Runs both `e2eTest` and `cucumberE2eTest`. |
 | `startE2eService` | Packages and starts the JAR, records PID plus launch identity, writes `build/application.log`, and waits for health. |
 | `stopE2eService` | Stops only a live process whose PID and recorded launch identity match the packaged JAR. |

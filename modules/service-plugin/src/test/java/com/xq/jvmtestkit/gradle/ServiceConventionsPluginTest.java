@@ -82,6 +82,36 @@ class ServiceConventionsPluginTest {
     }
 
     @Test
+    void generatesSpringCucumberBootstrapAndPatchesPlatformProperties() throws IOException {
+        writeSettings();
+        writeBuild("""
+                plugins {
+                    id 'com.xq.jvm-test-kit.service-plugin'
+                }
+
+                jvmTestKitService {
+                    cucumberPackage = 'com.example.acceptance'
+                    cucumberGlue = ['com.example.steps']
+                }
+                """);
+        Path properties = projectDirectory.resolve("src/e2e/resources/junit-platform.properties");
+        Files.createDirectories(properties.getParent());
+        Files.writeString(properties, "cucumber.glue=com.example.custom\ncustom.value=kept\n");
+
+        BuildResult result = pluginClasspathRunner("initJvmTestKitSpringCucumber").build();
+
+        assertEquals(SUCCESS, result.task(":initJvmTestKitSpringCucumber").getOutcome());
+        assertTrue(Files.readString(properties).contains(
+                "cucumber.glue=com.example.custom,com.xq.jvmtestkit.cucumber,com.example.steps,com.example.acceptance"));
+        assertTrue(Files.readString(properties).contains("custom.value=kept"));
+        Path configuration = projectDirectory.resolve(
+                "src/e2e/java/com/example/acceptance/CucumberSpringConfiguration.java");
+        String source = Files.readString(configuration);
+        assertTrue(source.contains("extends XqCucumberSpringConfiguration"));
+        assertTrue(source.contains("@CucumberContextConfiguration"));
+    }
+
+    @Test
     void rejectsUnsafeArtifactName() throws IOException {
         writeSettings();
         writeBuild("""

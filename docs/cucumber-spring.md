@@ -9,6 +9,28 @@ The service Gradle plugin configures the Spring Cucumber runtime automatically:
 jvmTestKitService { }
 ```
 
+For a new service, the plugin can create the bootstrap files:
+
+```bash
+./gradlew initJvmTestKitSpringCucumber
+```
+
+Configure the package and consumer glue before running the task when the
+defaults are not appropriate:
+
+```groovy
+jvmTestKitService {
+    cucumberPackage = 'com.example.acceptance'
+    cucumberGlue = ['com.example.steps']
+}
+```
+
+The task creates a `CucumberSpringConfiguration` extending
+`XqCucumberSpringConfiguration` and merges the required
+`cucumber.glue`/`cucumber.plugin` entries into
+`src/e2e/resources/junit-platform.properties`. It does not overwrite an
+existing Java configuration class or unrelated properties.
+
 For a direct fixture dependency, add the library and Spring integration
 dependencies explicitly:
 
