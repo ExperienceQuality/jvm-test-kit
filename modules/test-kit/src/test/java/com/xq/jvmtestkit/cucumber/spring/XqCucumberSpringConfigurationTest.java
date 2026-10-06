@@ -1,10 +1,12 @@
 package com.xq.jvmtestkit.cucumber.spring;
 
 import com.xq.jvmtestkit.cucumber.XqCucumberContext;
+import io.cucumber.spring.CucumberContextConfiguration;
 import io.cucumber.spring.ScenarioScope;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -17,6 +19,16 @@ class XqCucumberSpringConfigurationTest {
     @Test
     void usesOnlyTheDedicatedCompanyUtilityContext() {
         assertNotNull(XqCucumberSpringTestConfiguration.class.getAnnotation(TestConfiguration.class));
+    }
+
+    @Test
+    void providesReusableCucumberSpringConfiguration() {
+        assertNotNull(XqCucumberSpringConfiguration.class.getAnnotation(CucumberContextConfiguration.class));
+        ContextConfiguration contextConfiguration =
+                XqCucumberSpringConfiguration.class.getAnnotation(ContextConfiguration.class);
+
+        assertNotNull(contextConfiguration);
+        assertEquals(XqCucumberSpringTestConfiguration.class, contextConfiguration.classes()[0]);
     }
 
     @Test
