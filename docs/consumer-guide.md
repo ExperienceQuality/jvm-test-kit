@@ -38,9 +38,34 @@ Pin exact versions. Do not use dynamic selectors such as `3.+`.
 
 ## Spring Cucumber integration
 
-The integration uses Cucumber's JUnit Platform engine and Spring.
-Configure the application glue and company plugin in
-`src/test/resources/junit-platform.properties`:
+The integration uses Cucumber's JUnit Platform engine and Spring. If the
+consumer applies `com.xq.jvm-test-kit.service-plugin`, the recommended
+greenfield setup is:
+
+```groovy
+jvmTestKitService {
+    cucumberPackage = 'com.example.acceptance'
+    cucumberGlue = ['com.example.steps']
+}
+```
+
+Then generate the bootstrap files:
+
+```bash
+./gradlew initJvmTestKitSpringCucumber
+```
+
+The task creates the Spring Cucumber configuration under `src/e2e/java` and
+merges the required entries into
+`src/e2e/resources/junit-platform.properties`. It is safe to rerun: unrelated
+properties are preserved and an existing Java configuration class is never
+overwritten. The generated class extends
+`XqCucumberSpringConfiguration`; add consumer-owned Spring test utilities with
+`@ContextConfiguration` when needed.
+
+For an existing or direct Gradle consumer, configure the application glue and
+company plugin manually in `src/test/resources/junit-platform.properties`
+or the equivalent `src/e2e/resources` location:
 
 ```properties
 cucumber.glue=com.xq.jvmtestkit.cucumber,example.steps
@@ -133,10 +158,13 @@ testImplementation 'org.springframework.boot:spring-boot-test'
 testImplementation 'org.springframework:spring-test'
 ```
 
-Define one `@CucumberContextConfiguration` with a utility-only
-`@ContextConfiguration`
-that imports `XqCucumberSpringTestConfiguration` and the company test utility
-beans. Application steps can then constructor-inject those utility beans.
+Define one consumer class with `@CucumberContextConfiguration` that extends
+`XqCucumberSpringConfiguration`. The base class supplies the kit's
+`XqCucumberSpringTestConfiguration`; add a consumer `@ContextConfiguration`
+only when registering company test utility beans. Application steps can then
+constructor-inject those utility beans. `@CucumberContextConfiguration` must
+remain directly on the consumer class because Cucumber does not inherit that
+marker from an abstract superclass.
 
 The Spring integration manages test utilities and scenario scope; it does not boot
 or replace the application context unless the consumer explicitly chooses to

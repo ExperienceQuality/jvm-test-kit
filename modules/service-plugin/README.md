@@ -78,9 +78,10 @@ object, and multiple rows become an array. JSON literals are parsed and
 unquoted bare text becomes a string.
 
 The plugin configures Spring Cucumber integration and supplies its runtime
-dependencies. Spring consumers provide one dedicated
-`@CucumberContextConfiguration` importing the library's company utility test
-configuration; it does not load the application-under-test context. See
+dependencies. Generated Spring consumers provide one dedicated
+`@CucumberContextConfiguration` extending
+`XqCucumberSpringConfiguration`; add consumer utility configuration only when
+needed. The bootstrap does not load the application-under-test context. See
 [optional Spring integration](../../docs/cucumber-spring.md).
 
 ## DSL contract

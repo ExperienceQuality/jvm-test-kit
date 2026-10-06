@@ -44,11 +44,12 @@ testImplementation 'org.springframework:spring-test'
 
 The Spring integration provides the company Cucumber context as a scenario-scoped
 bean. Each Spring consumer defines exactly one `@CucumberContextConfiguration`
-with a dedicated `@ContextConfiguration`, importing the library's
-`XqCucumberSpringTestConfiguration` plus any company test utility
-`@TestConfiguration` classes. This is deliberately separate from the
-application-under-test context. The JUnit Platform Cucumber engine remains the
-execution entry point. See the [service plugin guide](../modules/service-plugin/README.md).
+directly on its consumer configuration class, which extends
+`XqCucumberSpringConfiguration`. Add a dedicated `@ContextConfiguration` only
+when importing company test utility `@TestConfiguration` classes. This is
+deliberately separate from the application-under-test context. The JUnit
+Platform Cucumber engine remains the execution entry point. See the [service
+plugin guide](../modules/service-plugin/README.md).
 
 The library aligns `cucumber-spring` with the same Cucumber BOM as the core kit.
 Cucumber's [state and DI guide](https://cucumber.io/docs/cucumber/state/)

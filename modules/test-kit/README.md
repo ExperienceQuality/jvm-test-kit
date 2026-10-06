@@ -84,6 +84,25 @@ cucumber.glue=com.xq.jvmtestkit.cucumber,example.steps
 cucumber.plugin=com.xq.jvmtestkit.cucumber.XqCucumberPlugin
 ```
 
+When using the service Gradle plugin in a new consumer, configure and generate
+the Spring Cucumber bootstrap instead of creating these files by hand:
+
+```groovy
+jvmTestKitService {
+    cucumberPackage = 'com.example.acceptance'
+    cucumberGlue = ['com.example.steps']
+}
+```
+
+```bash
+./gradlew initJvmTestKitSpringCucumber
+```
+
+The generator creates the `src/e2e` bootstrap class and patches the matching
+`junit-platform.properties` file without overwriting existing Java source.
+Direct consumers that do not use the service plugin should follow the [Spring
+integration guide](../../docs/cucumber-spring.md).
+
 Constructor-inject `XqCucumberContext` into step classes. It exposes scenario
 scoped `rest()`, `runId()`, and `baseUri()` values. Compose structured request
 bodies by using field paths as table column headers. Each data row becomes one

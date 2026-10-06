@@ -53,6 +53,9 @@ callers decide when to start and stop the service and any external
 infrastructure. Cucumber runs through its JUnit Platform engine and the
 standard Console Launcher. Consumer `junit-platform.properties` owns glue and
 plugin configuration so IDEs and Gradle use the same Cucumber engine setup.
+The `initJvmTestKitSpringCucumber` task creates the standard Spring bootstrap
+and patches those properties for greenfield consumers; it preserves
+consumer-owned Java configuration.
 
 ## Compatibility
 
