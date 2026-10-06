@@ -1,44 +1,22 @@
-import org.gradle.authentication.http.BasicAuthentication
-
 plugins {
     id 'java'
 }
 
 repositories {
-    def testRepository = providers.gradleProperty('testRepository')
-    if (!testRepository.isPresent()) {
-        throw new GradleException('testRepository must point to the isolated JVM Test Kit Maven repository')
-    }
-    exclusiveContent {
-        forRepository {
-            maven {
-                name = 'JvmTestKitTestRepository'
-                url = uri(testRepository.get())
-                if (url.scheme in ['http', 'https']) {
-                    credentials {
-                        username = providers.environmentVariable('GITHUB_ACTOR').orNull
-                        password = providers.environmentVariable('GITHUB_TOKEN').orNull
-                    }
-                    authentication {
-                        basic(BasicAuthentication)
-                    }
-                }
-            }
-        }
-        filter { includeGroup 'com.xq' }
-    }
     mavenCentral()
 }
 
-def kitVersion = providers.gradleProperty('kitVersion').orElse('3.0.0-dev').get()
-
 dependencies {
-    testImplementation "com.xq:jvm-test-kit-spring:${kitVersion}"
+    testImplementation project(':test-kit')
     testImplementation platform('org.junit:junit-bom:6.0.0')
     testImplementation 'org.junit.jupiter:junit-jupiter:6.0.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation platform('io.cucumber:cucumber-bom:8.0.2')
     testImplementation 'io.cucumber:cucumber-java'
+    testImplementation 'io.cucumber:cucumber-spring'
+    testImplementation platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
+    testImplementation 'org.springframework.boot:spring-boot-test'
+    testImplementation 'org.springframework:spring-test'
     testRuntimeOnly 'io.cucumber:cucumber-junit-platform-engine'
 }
 

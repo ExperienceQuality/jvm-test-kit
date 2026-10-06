@@ -1,39 +1,43 @@
-# Optional Spring Cucumber adapter
+# Optional Spring Cucumber integration
 
-The default integration uses PicoContainer. Spring support is an optional,
-separate `com.xq:jvm-test-kit-spring:<releaseVersion>` artifact. A test runtime
-must use exactly one Cucumber object factory: do not combine
-`cucumber-picocontainer` and `cucumber-spring`.
+The integration uses Cucumber Spring. Spring support is included in the
+`com.xq:jvm-test-kit:<releaseVersion>` artifact.
 
-For the service Gradle plugin, select Spring instead of the default Pico mode:
+The service Gradle plugin configures the Spring Cucumber runtime automatically:
 
 ```groovy
-jvmTestKitService {
-    cucumberDependencyInjection = 'spring'
-}
+jvmTestKitService { }
 ```
 
-The Spring adapter provides the company Cucumber context as a scenario-scoped
+For a direct fixture dependency, add the library and Spring integration
+dependencies explicitly:
+
+```groovy
+testImplementation 'com.xq:jvm-test-kit:3.0.0'
+testImplementation 'io.cucumber:cucumber-spring'
+testImplementation platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
+testImplementation 'org.springframework.boot:spring-boot-test'
+testImplementation 'org.springframework:spring-test'
+```
+
+The Spring integration provides the company Cucumber context as a scenario-scoped
 bean. Each Spring consumer defines exactly one `@CucumberContextConfiguration`
-with a dedicated `@ContextConfiguration`, importing the adapter's
+with a dedicated `@ContextConfiguration`, importing the library's
 `XqCucumberSpringTestConfiguration` plus any company test utility
 `@TestConfiguration` classes. This is deliberately separate from the
 application-under-test context. The JUnit Platform Cucumber engine remains the
 execution entry point. See the [service plugin guide](../modules/service-plugin/README.md).
 
-The artifact aligns `cucumber-spring` with the same Cucumber BOM as the core
-kit. Cucumber's [state and DI guide](https://cucumber.io/docs/cucumber/state/)
+The library aligns `cucumber-spring` with the same Cucumber BOM as the core kit.
+Cucumber's [state and DI guide](https://cucumber.io/docs/cucumber/state/)
 recommends one DI module and scenario-scoped state; the adapter follows that
-model without changing the default Pico integration.
+model with one consistent object factory.
 
-`fixtures/spring-consumer` demonstrates the standard JUnit Platform + Cucumber
-engine path, an explicit utility-only `@ContextConfiguration`, a Spring-managed
-scenario-scoped company API utility injected into steps, and an in-process HTTP
-API. It runs independently from `fixtures/clean-consumer`, which remains the
-Pico-backed example:
+The `:spring-consumer` module demonstrates the standard JUnit Platform +
+Cucumber engine path, an explicit utility-only `@ContextConfiguration`, a
+Spring-managed scenario-scoped company API utility injected into steps, and an
+in-process HTTP API:
 
 ```bash
-./gradlew -p fixtures/spring-consumer clean check \
-  -PkitVersion=3.0.0-test \
-  -PtestRepository=/path/to/staged-maven-repository
+./gradlew :spring-consumer:check
 ```

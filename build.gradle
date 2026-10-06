@@ -11,21 +11,22 @@ version = providers.gradleProperty('releaseVersion')
 description = 'Aggregates the JVM Test Kit library and service Gradle plugin.'
 
 tasks.named('clean') {
-    dependsOn ':test-kit:clean', ':service-plugin:clean', ':spring-adapter:clean'
+    dependsOn ':test-kit:clean', ':service-plugin:clean', ':spring-consumer:clean'
 }
 
 tasks.named('assemble') {
-    dependsOn ':test-kit:assemble', ':service-plugin:assemble', ':spring-adapter:assemble'
+    dependsOn ':test-kit:assemble', ':service-plugin:assemble', ':spring-consumer:assemble'
 }
 
 tasks.named('check') {
-    dependsOn ':test-kit:check', ':service-plugin:check', ':spring-adapter:check'
+    dependsOn ':test-kit:check', ':service-plugin:check', ':spring-consumer:check'
 }
 
 tasks.register('verifyAll') {
-    description = 'Runs verification for both independently versioned products.'
+    description = 'Runs verification for the JVM Test Kit library and service Gradle plugin.'
     group = 'verification'
-    dependsOn ':test-kit:check', ':service-plugin:check', ':spring-adapter:check', ':service-plugin:validatePlugins'
+    dependsOn ':test-kit:check', ':service-plugin:check', ':spring-consumer:check',
+            ':service-plugin:validatePlugins'
 }
 
 def libraryTaskAliases = [

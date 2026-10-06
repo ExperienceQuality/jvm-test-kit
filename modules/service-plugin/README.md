@@ -63,12 +63,9 @@ field paths as table column headers. Each data row becomes one nested JSON
 object, and multiple rows become an array. JSON literals are parsed and
 unquoted bare text becomes a string.
 
-PicoContainer is the default DI backend. Spring consumers can opt into the
-separate `com.xq:jvm-test-kit-spring` artifact by setting
-`cucumberDependencyInjection = 'spring'`; the plugin then supplies Spring
-Cucumber integration instead of PicoContainer. Never add both Cucumber object
-factory modules to one test runtime. Spring consumers provide one dedicated
-`@CucumberContextConfiguration` importing the adapter's company utility test
+The plugin configures Spring Cucumber integration and supplies its runtime
+dependencies. Spring consumers provide one dedicated
+`@CucumberContextConfiguration` importing the library's company utility test
 configuration; it does not load the application-under-test context. See
 [optional Spring integration](../../docs/cucumber-spring.md).
 
@@ -81,7 +78,6 @@ configuration; it does not load the application-under-test context. See
 | `startupTimeout` | 120 seconds | Bounded wait for startup. |
 | `jvmArgs` | empty | Arguments passed before `-jar`. |
 | `environment` | empty | Non-secret overrides added to the inherited process environment. |
-| `cucumberDependencyInjection` | `pico` | Cucumber DI backend: `pico` or optional `spring`. Exactly one object factory is selected. |
 
 Keep credentials in the inherited environment. Do not place secrets in the
 extension, JVM arguments, source, or Gradle properties.

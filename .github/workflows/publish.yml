@@ -85,12 +85,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
         run: |
-          ./gradlew --no-daemon -p fixtures/clean-consumer clean check \
-            -PkitVersion="$VERSION" \
-            -PtestRepository="https://maven.pkg.github.com/${GITHUB_REPOSITORY}"
-          ./gradlew --no-daemon -p fixtures/spring-consumer clean check \
-            -PkitVersion="$VERSION" \
-            -PtestRepository="https://maven.pkg.github.com/${GITHUB_REPOSITORY}"
+          ./gradlew --no-daemon :spring-consumer:check
       - name: Verify published plugin marker through remote resolution
         if: ${{ inputs.product == 'plugin' }}
         env:

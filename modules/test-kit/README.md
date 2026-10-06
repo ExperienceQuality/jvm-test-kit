@@ -6,7 +6,7 @@ for service-relative HTTP requests, immutable responses, and status/JSON
 assertions against a service that is already running.
 
 The module also provides a Cucumber JVM adapter built on Cucumber's JUnit
-Platform engine and PicoContainer. Cucumber retains feature discovery,
+Platform engine and Spring. Cucumber retains feature discovery,
 selection, execution, IDE integration, and exit status. The XQ adapter supplies
 scenario-scoped REST context, lifecycle hooks, optional redacted lifecycle
 events, and JSON composition from DataTables.
@@ -125,9 +125,8 @@ response.should().hasJsonPathValue("$.status", "accepted");
 All table values retain JSON types: `true`, `null`, and numeric literals are
 not strings. A missing path, `null`, a wrong scalar type, and a mismatched
 array are distinct failures. Assertion messages redact response bodies.
-`fixtures/clean-consumer` demonstrates Pico steps and
-`fixtures/spring-consumer` demonstrates Spring-managed company utilities; both
-use business-language steps rather than generic framework REST steps. The
+The `:spring-consumer` module demonstrates Spring-managed company utilities
+using business-language steps rather than generic framework REST steps. The
 [Spring integration guide](../../docs/cucumber-spring.md) explains the optional
 Spring object factory.
 
@@ -137,8 +136,7 @@ Spring object factory.
 ./gradlew --no-daemon :test-kit:check -PreleaseVersion=2.0.0-test
 ./gradlew --no-daemon :test-kit:publishMavenJavaPublicationToTestRepository \
   -PreleaseVersion=2.0.0-test -PtestRepository=/tmp/jvm-test-kit-repository
-./gradlew --no-daemon -p fixtures/clean-consumer clean check \
-  -PkitVersion=2.0.0-test -PtestRepository=/tmp/jvm-test-kit-repository
+./gradlew --no-daemon :spring-consumer:check
 ```
 
 `check` includes tests and binary compatibility against the configured

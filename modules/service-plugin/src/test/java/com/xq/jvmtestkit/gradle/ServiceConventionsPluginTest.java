@@ -58,10 +58,6 @@ class ServiceConventionsPluginTest {
                     id 'com.xq.jvm-test-kit.service-plugin'
                 }
 
-                configurations.configureEach {
-                    exclude group: 'com.xq', module: 'jvm-test-kit'
-                }
-
                 tasks.named('cucumberE2eTest', Test)
                 """);
         writeMain(simpleMain());
@@ -462,6 +458,22 @@ class ServiceConventionsPluginTest {
                 public final class SmokeSteps {
                     @Given("a passing step")
                     public void passingStep() {
+                    }
+                }
+                """);
+
+        Files.writeString(stepDirectory.resolve("SpringConfiguration.java"), """
+                package example;
+
+                import io.cucumber.spring.CucumberContextConfiguration;
+                import org.springframework.context.annotation.Configuration;
+                import org.springframework.test.context.ContextConfiguration;
+
+                @CucumberContextConfiguration
+                @ContextConfiguration(classes = SpringConfiguration.TestConfig.class)
+                public class SpringConfiguration {
+                    @Configuration
+                    static class TestConfig {
                     }
                 }
                 """);

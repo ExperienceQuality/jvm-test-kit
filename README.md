@@ -2,15 +2,15 @@
 
 [![Delivery](https://github.com/ExperienceQuality/jvm-test-kit/actions/workflows/deploy.yml/badge.svg)](https://github.com/ExperienceQuality/jvm-test-kit/actions/workflows/deploy.yml)
 
-This repository publishes two independently versioned products for JVM
-services. The root Gradle build aggregates them and preserves the legacy JVM
-Test Kit task names; product code and publication ownership live in the module
-directories.
+This repository publishes the JVM Test Kit library and a service Gradle plugin
+for JVM services. The library includes its Cucumber, REST, and optional Spring
+test integrations. The root Gradle build aggregates the products and preserves
+the legacy JVM Test Kit task names; product code and publication ownership live
+in the module directories.
 
 | Product | Source | Public identity | Version input | Release tag |
 | --- | --- | --- | --- | --- |
 | JVM Test Kit | [`modules/test-kit`](modules/test-kit/README.md) | `com.xq:jvm-test-kit:<version>` | `releaseVersion` | `vMAJOR.MINOR.PATCH` |
-| JVM Test Kit Spring Adapter | [`docs/cucumber-spring.md`](docs/cucumber-spring.md) | `com.xq:jvm-test-kit-spring:<version>` | `releaseVersion` | `vMAJOR.MINOR.PATCH` |
 | Service Gradle Plugin | [`modules/service-plugin`](modules/service-plugin/README.md) | plugin `com.xq.jvm-test-kit.service-plugin`; implementation `com.xq.jvm-test-kit:service-plugin:<version>` | `pluginVersion` | `plugin-vMAJOR.MINOR.PATCH` |
 
 A library release never implies a plugin release, and a plugin release never
@@ -56,7 +56,7 @@ Run the complete repository gate:
 Run one product independently:
 
 ```bash
-./gradlew --no-daemon :test-kit:check :spring-adapter:check -PreleaseVersion=2.0.0-test
+./gradlew --no-daemon :test-kit:check -PreleaseVersion=2.0.0-test
 ./gradlew --no-daemon :service-plugin:test :service-plugin:validatePlugins \
   -PpluginVersion=0.1.0-test
 ```

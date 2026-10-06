@@ -25,7 +25,7 @@ the directory as one uniquely named workflow artifact.
 The test stage downloads that artifact, verifies its identity and byte set,
 and resolves consumers from the staged repository. It does not rebuild the
 publication being tested. Library validation includes compatibility and the
-clean-consumer fixture. Plugin validation includes TestKit, plugin validation,
+Spring consumer module. Plugin validation includes TestKit, plugin validation,
 and exact marker resolution.
 
 The publish stage downloads and verifies the same artifact, creates provenance

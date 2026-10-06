@@ -2,17 +2,17 @@
 
 ## Product ownership
 
-The repository is one Gradle multi-project build with two products. Each
+The repository is one Gradle multi-project build with two products. The
+`test-kit` module owns the library and its optional Spring integration. Each
 module owns its source, tests, version input, publication, and consumer
 contract.
 
 | Boundary | Owns | Does not own |
 | --- | --- | --- |
-| `modules/test-kit` | `com.xq:jvm-test-kit`, Jupiter and Cucumber scenario lifecycle, REST client values and assertions, compatibility report, SBOM | Service process startup, service builds, infrastructure |
-| `modules/spring-adapter` | Optional `com.xq:jvm-test-kit-spring`; scenario-scoped company context and Spring Cucumber object factory integration | Default DI selection, AUT Spring context, Pico integration |
+| `modules/test-kit` | `com.xq:jvm-test-kit`, Jupiter and Cucumber scenario lifecycle, REST client values and assertions, Spring Cucumber integration, compatibility report, SBOM | Service process startup, service builds, infrastructure |
 | `modules/service-plugin` | Plugin ID and marker, `jvmTestKitService` DSL, Java/Spring conventions, Cucumber/Jupiter E2E tasks, packaging and owned-process tasks | Test-kit public Java API, databases, containers, deployment |
 | Root build | Module inclusion, aggregate `clean`/`assemble`/`check`, `verifyAll`, legacy library task facade | Product source or independent version selection |
-| `fixtures/clean-consumer` | External resolution proof for the staged library | Published production code |
+| `:spring-consumer` | In-repository Spring Cucumber consumer verification | Published production code |
 | `ci` and `.github/workflows` | Immutable staging, evidence, promotion, release routing | Product behavior |
 
 New code belongs in the module that owns its public contract. The root facade

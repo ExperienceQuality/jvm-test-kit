@@ -36,9 +36,9 @@ test {
 
 Pin exact versions. Do not use dynamic selectors such as `3.+`.
 
-## Default PicoContainer integration
+## Spring Cucumber integration
 
-The normal integration uses Cucumber's JUnit Platform engine and PicoContainer.
+The integration uses Cucumber's JUnit Platform engine and Spring.
 Configure the application glue and company plugin in
 `src/test/resources/junit-platform.properties`:
 
@@ -121,21 +121,24 @@ for diagnosis.
 
 ## Optional Spring integration
 
-Use Spring only when the test utility layer benefits from Spring dependency
-injection; it is not the application-under-test context. Add the adapter and
-use exactly one Cucumber object factory:
+The service plugin supplies the Spring Cucumber dependencies automatically.
+Direct consumers add the Spring dependencies and use exactly one Cucumber
+object factory:
 
 ```groovy
-testImplementation 'com.xq:jvm-test-kit-spring:3.0.0'
+testImplementation 'com.xq:jvm-test-kit:3.0.0'
 testImplementation 'io.cucumber:cucumber-spring'
+testImplementation platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
+testImplementation 'org.springframework.boot:spring-boot-test'
+testImplementation 'org.springframework:spring-test'
 ```
 
-Do not combine `cucumber-picocontainer` and `cucumber-spring`. Define one
-`@CucumberContextConfiguration` with a utility-only `@ContextConfiguration`
+Define one `@CucumberContextConfiguration` with a utility-only
+`@ContextConfiguration`
 that imports `XqCucumberSpringTestConfiguration` and the company test utility
 beans. Application steps can then constructor-inject those utility beans.
 
-The Spring adapter manages test utilities and scenario scope; it does not boot
+The Spring integration manages test utilities and scenario scope; it does not boot
 or replace the application context unless the consumer explicitly chooses to
 include application configuration.
 

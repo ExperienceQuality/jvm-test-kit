@@ -62,21 +62,16 @@ jobs:
         run: python3 ci/staging_manifest.py verify .ci-staging "$PRODUCT" "$VERSION" "$COMMIT"
       - name: Test immutable staging and promotion controls
         run: python3 ci/test_release_artifacts.py
-      - name: Test library and clean consumer against staged bytes
+      - name: Test library and Spring consumer
         if: ${{ inputs.product == 'all' || inputs.product == 'library' }}
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
         run: |
-          ./gradlew --no-daemon :test-kit:check :spring-adapter:check -PreleaseVersion="$VERSION"
+          ./gradlew --no-daemon :test-kit:check -PreleaseVersion="$VERSION"
           test -s build/reports/japicmp/report.txt
-          ./gradlew --no-daemon -p fixtures/clean-consumer clean check \
-            -PkitVersion="$VERSION" \
-            -PtestRepository="$GITHUB_WORKSPACE/.ci-staging/repository"
-          ./gradlew --no-daemon -p fixtures/spring-consumer clean check \
-            -PkitVersion="$VERSION" \
-            -PtestRepository="$GITHUB_WORKSPACE/.ci-staging/repository"
+          ./gradlew --no-daemon :spring-consumer:check
       - name: Test plugin against staged marker and implementation
         if: ${{ inputs.product == 'all' || inputs.product == 'plugin' }}
         env:
@@ -92,7 +87,6 @@ jobs:
           for entry in \
             'build/test-results:.ci-evidence/test-results/library' \
             'modules/service-plugin/build/test-results:.ci-evidence/test-results/plugin' \
-            'fixtures/clean-consumer/build/test-results:.ci-evidence/test-results/consumer-pico' \
             'fixtures/spring-consumer/build/test-results:.ci-evidence/test-results/consumer-spring'; do
             source="${entry%%:*}"
             destination="${entry#*:}"

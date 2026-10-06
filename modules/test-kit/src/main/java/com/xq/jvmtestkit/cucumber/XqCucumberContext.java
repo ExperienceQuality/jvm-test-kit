@@ -9,7 +9,7 @@ import java.util.UUID;
 
 import io.cucumber.java.Scenario;
 
-/** Scenario-scoped XQ services supplied through Cucumber PicoContainer. */
+/** Scenario-scoped XQ services supplied through the configured Cucumber object factory. */
 public class XqCucumberContext implements AutoCloseable {
     private final String runId = UUID.randomUUID().toString();
     private URI baseUri;
