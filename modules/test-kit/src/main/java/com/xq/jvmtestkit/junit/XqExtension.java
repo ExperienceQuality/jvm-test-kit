@@ -1,5 +1,6 @@
 package com.xq.jvmtestkit.junit;
 
+import com.xq.jvmtestkit.stub.StubRuntime;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -11,6 +12,10 @@ public final class XqExtension implements BeforeEachCallback, AfterEachCallback 
 
     @Override
     public void beforeEach(ExtensionContext context) {
+        context.getRoot().getStore(NAMESPACE).getOrComputeIfAbsent(
+                "stub-runtime",
+                ignored -> (ExtensionContext.Store.CloseableResource) StubRuntime::shutdown,
+                ExtensionContext.Store.CloseableResource.class);
         XqTestContext testContext = new XqTestContext();
         context.getStore(NAMESPACE).put(CONTEXT_KEY, testContext);
         try {

@@ -24,6 +24,28 @@ class XqConfigurationTest {
     }
 
     @Test
+    void loadsOptionalStubConfiguration() throws Exception {
+        Path root = Files.createTempDirectory("xq-stub-config-");
+        Files.writeString(root.resolve("xq.yaml"), """
+                xq.rest.base-uri: http://example.test/api
+                stub:
+                  enabled: true
+                  host: 127.0.0.1
+                  port: 18089
+                  reset-before-scenario: false
+                  isolate-scenarios: false
+                """);
+        try (URLClassLoader loader = new URLClassLoader(new URL[]{root.toUri().toURL()}, null)) {
+            XqConfiguration configuration = XqConfiguration.load(loader);
+            assertEquals(true, configuration.stub().enabled());
+            assertEquals("127.0.0.1", configuration.stub().host());
+            assertEquals(18089, configuration.stub().port());
+            assertEquals(false, configuration.stub().resetBeforeScenario());
+            assertEquals(false, configuration.stub().isolateScenarios());
+        }
+    }
+
+    @Test
     void rejectsMissingDuplicateAndUnsafeConfiguration() throws Exception {
         Path empty = Files.createTempDirectory("xq-empty-");
         try (URLClassLoader loader = new URLClassLoader(new URL[]{empty.toUri().toURL()}, null)) {

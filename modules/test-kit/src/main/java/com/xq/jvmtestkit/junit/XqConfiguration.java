@@ -6,15 +6,18 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Properties;
+import com.xq.jvmtestkit.config.ConfigurationManager;
 
 final class XqConfiguration {
     private static final String RESOURCE = "xq.yaml";
     private static final String REST_BASE_URI = "xq.rest.base-uri";
 
     private final URI restBaseUri;
+    private final StubSettings stub;
 
-    private XqConfiguration(URI restBaseUri) {
+    private XqConfiguration(URI restBaseUri, StubSettings stub) {
         this.restBaseUri = restBaseUri;
+        this.stub = stub;
     }
 
     static XqConfiguration load(ClassLoader loader) {
@@ -32,13 +35,18 @@ final class XqConfiguration {
             }
             Properties properties = new Properties();
             try (InputStream input = resource.openStream()) {
-                properties.load(input);
+                byte[] bytes = input.readAllBytes();
+                String source = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+                properties.load(new java.io.StringReader(source));
+                String value = properties.getProperty(REST_BASE_URI);
+                if (value == null || value.isBlank()) {
+                    throw new IllegalStateException("Missing required property xq.rest.base-uri in /xq.yaml");
+                }
+                ConfigurationManager.StubSettings stub = ConfigurationManager.loadStubSettings(loader);
+                return new XqConfiguration(normalize(URI.create(value)),
+                        new StubSettings(stub.enabled(), stub.host(), stub.port(),
+                                stub.resetBeforeScenario(), stub.isolateScenarios()));
             }
-            String value = properties.getProperty(REST_BASE_URI);
-            if (value == null || value.isBlank()) {
-                throw new IllegalStateException("Missing required property xq.rest.base-uri in /xq.yaml");
-            }
-            return new XqConfiguration(normalize(URI.create(value)));
         } catch (IOException exception) {
             throw new IllegalStateException("Could not read classpath configuration /xq.yaml", exception);
         } catch (IllegalArgumentException exception) {
@@ -48,6 +56,14 @@ final class XqConfiguration {
 
     URI restBaseUri() {
         return restBaseUri;
+    }
+
+    StubSettings stub() {
+        return stub;
+    }
+
+    record StubSettings(boolean enabled, String host, int port, boolean resetBeforeScenario,
+                        boolean isolateScenarios) {
     }
 
     private static URI normalize(URI input) {

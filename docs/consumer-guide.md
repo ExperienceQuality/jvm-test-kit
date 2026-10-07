@@ -25,7 +25,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'com.xq:jvm-test-kit:3.0.0'
+    testImplementation 'com.xq:jvm-test-kit:3.0.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -159,7 +159,7 @@ Direct consumers add the Spring dependencies and use exactly one Cucumber
 object factory:
 
 ```groovy
-testImplementation 'com.xq:jvm-test-kit:3.0.0'
+testImplementation 'com.xq:jvm-test-kit:3.0.3'
 testImplementation 'io.cucumber:cucumber-spring'
 testImplementation platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
 testImplementation 'org.springframework.boot:spring-boot-test'

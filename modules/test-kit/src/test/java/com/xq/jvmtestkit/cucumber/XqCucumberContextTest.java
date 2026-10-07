@@ -4,6 +4,7 @@ import io.cucumber.plugin.event.EventHandler;
 import io.cucumber.plugin.event.EventPublisher;
 import io.cucumber.plugin.event.TestCaseFinished;
 import io.cucumber.plugin.event.TestCaseStarted;
+import io.cucumber.plugin.event.TestRunFinished;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -48,6 +49,6 @@ class XqCucumberContextTest {
                 eventTypes.remove(eventType);
             }
         });
-        assertEquals(Set.of(TestCaseStarted.class, TestCaseFinished.class), eventTypes);
+        assertEquals(Set.of(TestCaseStarted.class, TestCaseFinished.class, TestRunFinished.class), eventTypes);
     }
 }

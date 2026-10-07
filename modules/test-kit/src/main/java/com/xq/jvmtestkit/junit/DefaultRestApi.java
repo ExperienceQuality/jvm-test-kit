@@ -13,6 +13,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Objects;
+import java.util.Map;
+import java.util.function.Supplier;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class DefaultRestApi implements RestApi, AutoCloseable {
@@ -22,10 +24,16 @@ public final class DefaultRestApi implements RestApi, AutoCloseable {
 
     private final URI baseUri;
     private final HttpClient client;
+    private final Supplier<Map<String, String>> defaultHeaders;
     private final AtomicBoolean closed = new AtomicBoolean();
 
     public DefaultRestApi(URI baseUri) {
+        this(baseUri, Map::of);
+    }
+
+    public DefaultRestApi(URI baseUri, Supplier<Map<String, String>> defaultHeaders) {
         this.baseUri = Objects.requireNonNull(baseUri, "baseUri");
+        this.defaultHeaders = Objects.requireNonNull(defaultHeaders, "defaultHeaders");
         this.client = HttpClient.newBuilder()
                 .connectTimeout(TIMEOUT)
                 .followRedirects(HttpClient.Redirect.NEVER)
@@ -72,6 +80,7 @@ public final class DefaultRestApi implements RestApi, AutoCloseable {
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
                 .timeout(TIMEOUT)
                 .method(method, HttpRequest.BodyPublishers.ofByteArray(body));
+        defaultHeaders.get().forEach(builder::header);
         request.headers().forEach((name, values) -> values.forEach(value -> builder.header(name, value)));
 
         try {
