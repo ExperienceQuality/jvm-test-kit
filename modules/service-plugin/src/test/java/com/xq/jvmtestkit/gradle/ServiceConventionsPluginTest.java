@@ -262,7 +262,9 @@ class ServiceConventionsPluginTest {
         writeLifecycleProject(port, port, Duration.ofSeconds(20));
         pluginClasspathRunner("packageService").build();
         Path jar = projectDirectory.resolve("build/service/lifecycle-service.jar");
-        Process impostor = new ProcessBuilder(javaExecutable(), "-jar", jar.toString())
+        ProcessBuilder impostorCommand = new ProcessBuilder(javaExecutable(), "-jar", jar.toString());
+        impostorCommand.environment().put("SERVICE_PORT", Integer.toString(port));
+        Process impostor = impostorCommand
                 .redirectErrorStream(true)
                 .redirectOutput(projectDirectory.resolve("build/impostor.log").toFile())
                 .start();
