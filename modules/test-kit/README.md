@@ -31,7 +31,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'com.xq:jvm-test-kit:3.0.0'
+    testImplementation 'com.xq:jvm-test-kit:3.0.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -74,6 +74,43 @@ class RoutineApiE2ETest {
 
 See the [API contract](../../docs/api.md) for lifecycle, request, response,
 matching, and safety semantics.
+
+## Downstream stubbing
+
+Configure the optional loopback WireMock server in the same `xq.yaml`:
+
+```yaml
+stub:
+  enabled: true
+  host: 127.0.0.1
+  port: 18089
+  reset-before-scenario: true
+  isolate-scenarios: true
+```
+
+`XQ_STUB_ENABLED`, `XQ_STUB_HOST`, `XQ_STUB_PORT`,
+`XQ_STUB_RESET_BEFORE_SCENARIO`, and `XQ_STUB_ISOLATE_SCENARIOS` override file
+values. The server starts eagerly when enabled or lazily on the first
+`Xq.stub()` call. Use a fixed port when a separately launched service must read
+the dependency URL before it starts; start the test JVM and stub before that
+service. Port `0` selects an ephemeral port for in-process orchestration.
+
+The API accepts WireMock's native builders:
+
+```java
+StubApi stub = Xq.stub();
+stub.stubFor(get(urlPathEqualTo("/api/v1/exercise-logs"))
+        .withQueryParam("exerciseName", equalTo("Squat"))
+        .willReturn(okJson("[{\"id\":11}]")));
+stub.verify(getRequestedFor(urlPathEqualTo("/api/v1/exercise-logs"))
+        .withQueryParam("exerciseName", equalTo("Squat")));
+```
+
+Scenario-isolated mode scopes mappings and request journals to
+`X-Xq-Test-Id`; `Xq.rest()` sends that header automatically. The service must
+propagate it to its downstream call for parallel isolation. Set
+Set `stub.isolate-scenarios: false` for services that cannot propagate the
+header; overlapping scenarios then fail fast.
 
 ## Cucumber scenarios
 

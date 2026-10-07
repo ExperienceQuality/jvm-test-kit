@@ -3,6 +3,8 @@ package com.xq.jvmtestkit.cucumber;
 import com.xq.jvmtestkit.config.ConfigurationManager;
 import com.xq.jvmtestkit.rest.RestApi;
 import com.xq.jvmtestkit.junit.DefaultRestApi;
+import com.xq.jvmtestkit.stub.StubApi;
+import com.xq.jvmtestkit.stub.StubRuntime;
 
 import java.net.URI;
 import java.util.Set;
@@ -16,6 +18,7 @@ public class XqCucumberContext implements AutoCloseable {
     private URI baseUri;
     private ScenarioMetadata scenario;
     private RestApi rest;
+    private StubApi stub;
     private boolean closed;
 
     public XqCucumberContext() {
@@ -34,6 +37,7 @@ public class XqCucumberContext implements AutoCloseable {
         } catch (IllegalArgumentException exception) {
             throw new IllegalStateException("Invalid property testBaseUrl in /xq.yaml", exception);
         }
+        if (ConfigurationManager.isStubEnabled()) stub();
     }
 
     /** Returns the scenario's service-relative REST client. */
@@ -43,9 +47,25 @@ public class XqCucumberContext implements AutoCloseable {
             throw new IllegalStateException("XQ Cucumber context has not started");
         }
         if (rest == null) {
-            rest = new DefaultRestApi(baseUri);
+            rest = new DefaultRestApi(baseUri, this::stubHeaders);
         }
         return rest;
+    }
+
+    private java.util.Map<String, String> stubHeaders() {
+        if (stub == null || !ConfigurationManager.isolateStubScenarios()) return java.util.Map.of();
+        return java.util.Map.of(StubApi.TEST_ID_HEADER, runId);
+    }
+
+    /** Returns the scenario-scoped downstream stub. */
+    public StubApi stub() {
+        ensureOpen();
+        if (scenario == null) throw new IllegalStateException("XQ Cucumber context has not started");
+        if (stub == null) {
+            stub = StubRuntime.open(runId, ConfigurationManager.getStubHost(), ConfigurationManager.getStubPort(),
+                    ConfigurationManager.resetStubBeforeScenario(), ConfigurationManager.isolateStubScenarios());
+        }
+        return stub.start();
     }
 
     /** Opaque identifier shared by all events for this scenario. */
@@ -78,6 +98,8 @@ public class XqCucumberContext implements AutoCloseable {
                 throw new IllegalStateException("Could not close XQ scenario REST client", exception);
             }
         }
+        if (stub != null) stub.close();
+        stub = null;
         rest = null;
     }
 

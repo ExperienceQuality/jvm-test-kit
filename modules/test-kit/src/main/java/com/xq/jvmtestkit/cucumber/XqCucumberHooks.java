@@ -15,10 +15,15 @@ public final class XqCucumberHooks {
     @Before(order = Integer.MIN_VALUE)
     public void beforeScenario(Scenario scenario) {
         context.start(scenario);
+        XqCucumberStubHolder.bind(context);
     }
 
     @After(order = Integer.MAX_VALUE)
     public void afterScenario(Scenario scenario) {
-        context.close();
+        try {
+            context.close();
+        } finally {
+            XqCucumberStubHolder.unbind(context);
+        }
     }
 }

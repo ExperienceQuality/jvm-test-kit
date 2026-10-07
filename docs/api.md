@@ -56,6 +56,38 @@ bodies or header values.
 
 ## Safety defaults
 
+## Downstream stub API
+
+The optional stub server is configured with a nested `stub` block in `xq.yaml`:
+
+```yaml
+stub:
+  enabled: true
+  host: 127.0.0.1
+  port: 18089
+  reset-before-scenario: true
+  isolate-scenarios: true
+```
+
+Environment variables with the corresponding `XQ_STUB_*` names override these
+values. The server binds a real TCP listener, uses an ephemeral port when the
+configured port is `0`, and exposes `StubApi.baseUri()` after `start()`.
+`Xq.stub()` starts it lazily unless `enabled` is true. A fixed port is required
+when a separately launched service reads its dependency URL before startup.
+
+`StubApi` accepts WireMock `MappingBuilder` and `RequestPatternBuilder` values,
+including native method, URL, query, header, body, JSON, response, delay,
+fault, verification, and count-matching builders. `failConnection` simulates a
+connection reset; a true connection-refused case requires an unused or stopped
+endpoint.
+
+Each JUnit invocation and Cucumber scenario receives a unique test ID. In
+isolated mode mappings and verification patterns are automatically constrained
+by `X-Xq-Test-Id`, and resets remove only that scenario's mappings and journal
+entries. `Xq.rest()` adds the header automatically. Services that cannot
+propagate it must disable isolation and run scenarios serially; overlapping
+scenarios fail fast.
+
 ## Public API reference
 
 `RestApi` exposes `get(path)`, `get(path, request)`, `post(path, request)`, and

@@ -6,6 +6,8 @@ import io.cucumber.plugin.event.EventPublisher;
 import io.cucumber.plugin.event.TestCase;
 import io.cucumber.plugin.event.TestCaseFinished;
 import io.cucumber.plugin.event.TestCaseStarted;
+import io.cucumber.plugin.event.TestRunFinished;
+import com.xq.jvmtestkit.stub.StubRuntime;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -38,6 +40,7 @@ public final class XqCucumberPlugin implements ConcurrentEventListener {
     public void setEventPublisher(EventPublisher publisher) {
         publisher.registerHandlerFor(TestCaseStarted.class, this::onStarted);
         publisher.registerHandlerFor(TestCaseFinished.class, this::onFinished);
+        publisher.registerHandlerFor(TestRunFinished.class, ignored -> StubRuntime.shutdown());
     }
 
     private void onStarted(TestCaseStarted event) {
