@@ -6,7 +6,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Properties;
-import com.xq.jvmtestkit.config.StubConfiguration;
+import com.xq.jvmtestkit.config.ConfigurationManager;
 
 final class XqConfiguration {
     private static final String RESOURCE = "xq.yaml";
@@ -42,7 +42,7 @@ final class XqConfiguration {
                 if (value == null || value.isBlank()) {
                     throw new IllegalStateException("Missing required property xq.rest.base-uri in /xq.yaml");
                 }
-                StubConfiguration.Values stub = StubConfiguration.parse(properties, source);
+                ConfigurationManager.StubSettings stub = ConfigurationManager.loadStubSettings(loader);
                 return new XqConfiguration(normalize(URI.create(value)),
                         new StubSettings(stub.enabled(), stub.host(), stub.port(),
                                 stub.resetBeforeScenario(), stub.isolateScenarios()));

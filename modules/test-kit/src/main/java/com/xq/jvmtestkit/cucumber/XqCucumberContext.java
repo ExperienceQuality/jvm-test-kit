@@ -1,7 +1,6 @@
 package com.xq.jvmtestkit.cucumber;
 
 import com.xq.jvmtestkit.config.ConfigurationManager;
-import com.xq.jvmtestkit.config.StubConfiguration;
 import com.xq.jvmtestkit.rest.RestApi;
 import com.xq.jvmtestkit.junit.DefaultRestApi;
 import com.xq.jvmtestkit.stub.StubApi;
@@ -21,8 +20,8 @@ public class XqCucumberContext implements AutoCloseable {
     private RestApi rest;
     private StubApi stub;
     private boolean closed;
-    private final StubConfiguration.Values stubConfiguration =
-            StubConfiguration.load(Thread.currentThread().getContextClassLoader());
+    private final ConfigurationManager.StubSettings stubConfiguration =
+            ConfigurationManager.loadStubSettings(Thread.currentThread().getContextClassLoader());
 
     public XqCucumberContext() {
     }
