@@ -19,10 +19,9 @@ public final class Xq {
     }
 
     public static StubApi stub() {
-        try {
+        if (XqContextHolder.isActive()) {
             return XqContextHolder.current().stub();
-        } catch (IllegalStateException inactiveJUnitContext) {
-            return XqCucumberStubHolder.current().stub();
         }
+        return XqCucumberStubHolder.current().stub();
     }
 }

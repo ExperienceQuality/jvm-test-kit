@@ -21,6 +21,10 @@ final class XqContextHolder {
         return context;
     }
 
+    static boolean isActive() {
+        return CURRENT.get() != null;
+    }
+
     static void unbind(XqTestContext expected) {
         if (CURRENT.get() == expected) {
             CURRENT.remove();
