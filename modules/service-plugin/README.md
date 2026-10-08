@@ -39,6 +39,7 @@ plugins {
 }
 
 jvmTestKitService {
+    jvmTestKitVersion = '3.0.0'
     artifactName = 'example-service.jar'
     healthUrl = 'http://127.0.0.1:8080/actuator/health'
     startupTimeout = java.time.Duration.ofSeconds(120)
@@ -88,6 +89,7 @@ needed. The bootstrap does not load the application-under-test context. See
 
 | Property | Default | Purpose |
 | --- | --- | --- |
+| `jvmTestKitVersion` | `3.0.0` | Exact `com.xq:jvm-test-kit` version added to the E2E source set. The `-PjvmTestKitVersion` Gradle property can provide the default. |
 | `artifactName` | `<project-name>.jar` | Safe JAR basename copied to `build/service`. |
 | `healthUrl` | `http://127.0.0.1:8080/actuator/health` | HTTP(S) endpoint polled until it returns 2xx. |
 | `startupTimeout` | 120 seconds | Bounded wait for startup. |

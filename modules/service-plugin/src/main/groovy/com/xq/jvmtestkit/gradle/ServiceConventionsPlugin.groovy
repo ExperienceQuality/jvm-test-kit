@@ -29,7 +29,7 @@ import java.time.Duration
  * This class only applies plugins, declares inputs, and connects tasks.
  */
 final class ServiceConventionsPlugin implements Plugin<Project> {
-    private static final String JVM_TEST_KIT_VERSION = '3.0.0'
+    private static final String DEFAULT_JVM_TEST_KIT_VERSION = '3.0.0'
 
     @Override
     void apply(Project project) {
@@ -40,6 +40,10 @@ final class ServiceConventionsPlugin implements Plugin<Project> {
         def extension = project.extensions.create(
                 'jvmTestKitService',
                 JvmTestKitServiceExtension
+        )
+        extension.jvmTestKitVersion.convention(
+                project.providers.gradleProperty('jvmTestKitVersion')
+                        .orElse(DEFAULT_JVM_TEST_KIT_VERSION)
         )
         extension.artifactName.convention("${project.name}.jar")
         extension.healthUrl.convention('http://127.0.0.1:8080/actuator/health')
@@ -80,7 +84,10 @@ final class ServiceConventionsPlugin implements Plugin<Project> {
         project.dependencies.add('testImplementation', 'org.junit.jupiter:junit-jupiter:6.0.0')
         project.dependencies.add('testRuntimeOnly', 'org.junit.platform:junit-platform-launcher:6.0.0')
         project.dependencies.add(implementation, 'org.junit.jupiter:junit-jupiter-api:6.0.0')
-        project.dependencies.add(implementation, "com.xq:jvm-test-kit:${JVM_TEST_KIT_VERSION}")
+        project.dependencies.add(
+                implementation,
+                extension.jvmTestKitVersion.map { version -> "com.xq:jvm-test-kit:${version}" }
+        )
         project.dependencies.add(runtimeOnly, 'org.junit.jupiter:junit-jupiter-engine:6.0.0')
         project.dependencies.add(runtimeOnly, 'org.junit.platform:junit-platform-launcher:6.0.0')
         project.dependencies.add(implementation, project.dependencies.platform('io.cucumber:cucumber-bom:8.0.2'))

@@ -7,6 +7,9 @@ import org.gradle.api.provider.Property;
 import java.time.Duration;
 
 public abstract class JvmTestKitServiceExtension {
+    /** Library version resolved for the generated E2E source set. */
+    public abstract Property<String> getJvmTestKitVersion();
+
     public abstract Property<String> getArtifactName();
 
     public abstract Property<String> getHealthUrl();
