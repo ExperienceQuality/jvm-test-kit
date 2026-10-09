@@ -24,6 +24,32 @@ class ServiceConventionsPluginTest {
     Path projectDirectory;
 
     @Test
+    void allowsConsumerToSelectExactJvmTestKitVersion() throws IOException {
+        writeSettings();
+        writeBuild("""
+                plugins {
+                    id 'com.xq.jvm-test-kit.service-plugin'
+                }
+
+                tasks.register('printJvmTestKitVersion') {
+                    doLast {
+                        def dependency = configurations.e2eImplementation.dependencies.find {
+                            it.group == 'com.xq' && it.name == 'jvm-test-kit'
+                        }
+                        println dependency.version
+                    }
+                }
+                """);
+
+        BuildResult result = pluginClasspathRunner(
+                "printJvmTestKitVersion",
+                "-PjvmTestKitVersion=3.0.3"
+        ).build();
+
+        assertTrue(result.getOutput().contains("3.0.3"));
+    }
+
+    @Test
     void packagesARepresentativeGradle8145Consumer() throws IOException {
         writeSettings();
         writeBuild("""
