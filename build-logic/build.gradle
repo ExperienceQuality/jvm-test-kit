@@ -1,0 +1,21 @@
+plugins {
+    id 'groovy'
+    id 'java-gradle-plugin'
+}
+
+dependencies {
+    implementation localGroovy()
+}
+
+gradlePlugin {
+    plugins {
+        javaConventions {
+            id = 'xq.java-conventions'
+            implementationClass = 'com.xq.jvmtestkit.build.JavaConventionsPlugin'
+        }
+        publishingConventions {
+            id = 'xq.publishing-conventions'
+            implementationClass = 'com.xq.jvmtestkit.build.PublishingConventionsPlugin'
+        }
+    }
+}

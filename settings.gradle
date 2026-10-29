@@ -1,3 +1,7 @@
+pluginManagement {
+    includeBuild('build-logic')
+}
+
 rootProject.name = 'jvm-test-kit'
 
 include 'test-kit', 'service-plugin', 'spring-consumer'

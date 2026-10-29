@@ -1,30 +1,21 @@
 plugins {
-    id 'java'
-}
-
-repositories {
-    mavenCentral()
+    id 'xq.java-conventions'
 }
 
 dependencies {
     testImplementation project(':test-kit')
-    testImplementation platform('org.junit:junit-bom:6.0.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter:6.0.0'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testImplementation platform('io.cucumber:cucumber-bom:8.0.2')
-    testImplementation 'io.cucumber:cucumber-java'
-    testImplementation 'io.cucumber:cucumber-spring'
-    testImplementation platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
-    testImplementation 'org.springframework.boot:spring-boot-test'
-    testImplementation 'org.springframework:spring-test'
-    testRuntimeOnly 'io.cucumber:cucumber-junit-platform-engine'
-}
-
-java {
-    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+    testImplementation(platform(libs.junit.bom)) { endorseStrictVersions() }
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.platform.launcher
+    testImplementation(platform(libs.cucumber.bom)) { endorseStrictVersions() }
+    testImplementation libs.cucumber.java
+    testImplementation libs.cucumber.spring
+    testImplementation(platform(libs.spring.boot.dependencies)) { endorseStrictVersions() }
+    testImplementation libs.spring.boot.test
+    testImplementation libs.spring.test
+    testRuntimeOnly libs.cucumber.junit.platform.engine
 }
 
 test {
-    useJUnitPlatform()
     environment 'XQ_CUCUMBER_EVENTS_FILE', layout.buildDirectory.file('cucumber-events.ndjson').get().asFile.absolutePath
 }
