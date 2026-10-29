@@ -35,7 +35,7 @@ gradlePlugin {
     }
 }
 
-tasks.register('verifyPluginVersion', com.xq.jvmtestkit.build.VerifyReleaseVersion) {
+tasks.register('verifyPluginVersion', com.xq.jvmtestkit.conventions.VerifyReleaseVersion) {
     versionProperty = 'pluginVersion'
     exampleVersion = '1.2.3'
     candidate = project.version.toString()

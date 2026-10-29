@@ -11,11 +11,11 @@ gradlePlugin {
     plugins {
         javaConventions {
             id = 'xq.java-conventions'
-            implementationClass = 'com.xq.jvmtestkit.build.JavaConventionsPlugin'
+            implementationClass = 'com.xq.jvmtestkit.conventions.JavaConventionsPlugin'
         }
         publishingConventions {
             id = 'xq.publishing-conventions'
-            implementationClass = 'com.xq.jvmtestkit.build.PublishingConventionsPlugin'
+            implementationClass = 'com.xq.jvmtestkit.conventions.PublishingConventionsPlugin'
         }
     }
 }
