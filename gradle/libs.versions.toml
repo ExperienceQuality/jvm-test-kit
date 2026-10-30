@@ -1,0 +1,44 @@
+[versions]
+java = "21"
+# Gradle version used by the service plugin's consumer TestKit builds.
+consumer-gradle = "8.14.5"
+junit = "6.0.0"
+cucumber = "8.0.2"
+spring-boot = "4.1.1"
+spring-dependency-management = "1.1.7"
+jackson = "2.21.5"
+assertj = "3.27.6"
+wiremock = "3.13.2"
+json-unit = "4.1.0"
+aeonbits-owner = "1.0.12"
+# Released library the japicmp binary compatibility check compares against.
+jvm-test-kit-baseline = "2.0.0"
+# Library version the service plugin adds to consumer E2E source sets by default.
+jvm-test-kit-plugin-default = "3.0.0"
+
+[libraries]
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+cucumber-bom = { module = "io.cucumber:cucumber-bom", version.ref = "cucumber" }
+cucumber-java = { module = "io.cucumber:cucumber-java" }
+cucumber-plugin = { module = "io.cucumber:cucumber-plugin" }
+cucumber-spring = { module = "io.cucumber:cucumber-spring" }
+cucumber-junit-platform-engine = { module = "io.cucumber:cucumber-junit-platform-engine" }
+spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
+spring-boot-test = { module = "org.springframework.boot:spring-boot-test" }
+spring-test = { module = "org.springframework:spring-test" }
+spring-boot-gradle-plugin = { module = "org.springframework.boot:spring-boot-gradle-plugin", version.ref = "spring-boot" }
+spring-dependency-management-plugin = { module = "io.spring.gradle:dependency-management-plugin", version.ref = "spring-dependency-management" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+wiremock-standalone = { module = "org.wiremock:wiremock-standalone", version.ref = "wiremock" }
+json-unit-assertj = { module = "net.javacrumbs.json-unit:json-unit-assertj", version.ref = "json-unit" }
+aeonbits-owner = { module = "org.aeonbits.owner:owner", version.ref = "aeonbits-owner" }
+jvm-test-kit-baseline = { module = "com.xq:jvm-test-kit", version.ref = "jvm-test-kit-baseline" }
+
+[plugins]
+cyclonedx = { id = "org.cyclonedx.bom", version = "2.3.1" }
+japicmp = { id = "me.champeau.gradle.japicmp", version = "0.4.6" }

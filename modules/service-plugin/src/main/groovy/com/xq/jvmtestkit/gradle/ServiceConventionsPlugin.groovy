@@ -29,7 +29,7 @@ import java.time.Duration
  * This class only applies plugins, declares inputs, and connects tasks.
  */
 final class ServiceConventionsPlugin implements Plugin<Project> {
-    private static final String DEFAULT_JVM_TEST_KIT_VERSION = '3.0.0'
+    private static final Properties VERSIONS = loadVersions()
 
     @Override
     void apply(Project project) {
@@ -43,7 +43,7 @@ final class ServiceConventionsPlugin implements Plugin<Project> {
         )
         extension.jvmTestKitVersion.convention(
                 project.providers.gradleProperty('jvmTestKitVersion')
-                        .orElse(DEFAULT_JVM_TEST_KIT_VERSION)
+                        .orElse(version('jvmTestKit'))
         )
         extension.artifactName.convention("${project.name}.jar")
         extension.healthUrl.convention('http://127.0.0.1:8080/actuator/health')
@@ -55,7 +55,7 @@ final class ServiceConventionsPlugin implements Plugin<Project> {
         extension.cucumberGlue.convention(['com.xq.jvmtestkit.cucumber'])
 
         project.extensions.getByType(JavaPluginExtension).toolchain.languageVersion
-                .set(JavaLanguageVersion.of(21))
+                .set(JavaLanguageVersion.of(version('java')))
 
         configureRepositories(project)
         configureDependencies(project, extension)
@@ -80,21 +80,22 @@ final class ServiceConventionsPlugin implements Plugin<Project> {
         SourceSet e2e = sourceSets.create('e2e')
         def implementation = e2e.implementationConfigurationName
         def runtimeOnly = e2e.runtimeOnlyConfigurationName
+        def junit = version('junit')
 
-        project.dependencies.add('testImplementation', 'org.junit.jupiter:junit-jupiter:6.0.0')
-        project.dependencies.add('testRuntimeOnly', 'org.junit.platform:junit-platform-launcher:6.0.0')
-        project.dependencies.add(implementation, 'org.junit.jupiter:junit-jupiter-api:6.0.0')
+        project.dependencies.add('testImplementation', "org.junit.jupiter:junit-jupiter:${junit}")
+        project.dependencies.add('testRuntimeOnly', "org.junit.platform:junit-platform-launcher:${junit}")
+        project.dependencies.add(implementation, "org.junit.jupiter:junit-jupiter-api:${junit}")
         project.dependencies.add(
                 implementation,
                 extension.jvmTestKitVersion.map { version -> "com.xq:jvm-test-kit:${version}" }
         )
-        project.dependencies.add(runtimeOnly, 'org.junit.jupiter:junit-jupiter-engine:6.0.0')
-        project.dependencies.add(runtimeOnly, 'org.junit.platform:junit-platform-launcher:6.0.0')
-        project.dependencies.add(implementation, project.dependencies.platform('io.cucumber:cucumber-bom:8.0.2'))
+        project.dependencies.add(runtimeOnly, "org.junit.jupiter:junit-jupiter-engine:${junit}")
+        project.dependencies.add(runtimeOnly, "org.junit.platform:junit-platform-launcher:${junit}")
+        project.dependencies.add(implementation, project.dependencies.platform("io.cucumber:cucumber-bom:${version('cucumber')}"))
         project.dependencies.add(implementation, 'io.cucumber:cucumber-java')
         project.dependencies.add(implementation, 'io.cucumber:cucumber-spring')
         project.dependencies.add(implementation,
-                project.dependencies.platform('org.springframework.boot:spring-boot-dependencies:4.1.1'))
+                project.dependencies.platform("org.springframework.boot:spring-boot-dependencies:${version('springBoot')}"))
         project.dependencies.add(implementation, 'org.springframework.boot:spring-boot-test')
         project.dependencies.add(implementation, 'org.springframework:spring-test')
         project.dependencies.add(runtimeOnly, 'io.cucumber:cucumber-junit-platform-engine')
@@ -174,7 +175,7 @@ final class ServiceConventionsPlugin implements Plugin<Project> {
         }
 
         def launcher = project.extensions.getByType(JavaToolchainService).launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(21))
+            languageVersion.set(JavaLanguageVersion.of(version('java')))
         }
 
         def start = project.tasks.register('startE2eService', StartE2eServiceTask) {
@@ -197,6 +198,26 @@ final class ServiceConventionsPlugin implements Plugin<Project> {
             mustRunAfter(start)
             serviceJar.set(packageService.flatMap { it.outputJar })
             pidFile.set(project.layout.buildDirectory.file('application.pid'))
+        }
+    }
+
+    private static String version(String key) {
+        String value = VERSIONS.getProperty(key)
+        if (value == null) {
+            throw new IllegalStateException("Missing ${key} in plugin-versions.properties")
+        }
+        value
+    }
+
+    private static Properties loadVersions() {
+        def stream = ServiceConventionsPlugin.getResourceAsStream('plugin-versions.properties')
+        if (stream == null) {
+            throw new IllegalStateException('Missing plugin-versions.properties on the plugin classpath')
+        }
+        stream.withCloseable { input ->
+            def properties = new Properties()
+            properties.load(input)
+            properties
         }
     }
 }

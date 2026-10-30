@@ -57,6 +57,17 @@ The `initJvmTestKitSpringCucumber` task creates the standard Spring bootstrap
 and patches those properties for greenfield consumers; it preserves
 consumer-owned Java configuration.
 
+## Build Logic
+
+- `gradle/libs.versions.toml` owns every dependency, plugin, Java and consumer
+  Gradle version. The service plugin build writes the versions it adds to
+  consumer builds into `plugin-versions.properties`, so plugin defaults follow
+  the catalog.
+- `build-logic/` holds the shared conventions: `xq.java-conventions` (Java
+  toolchain, Maven Central, JUnit Platform) and `xq.publishing-conventions`
+  (sources JAR, POM licence and SCM, `Test` and `GitHubPackages` repositories,
+  and the `VerifyReleaseVersion` gate before repository publication).
+
 ## Compatibility
 
 - Both products require Java 21.

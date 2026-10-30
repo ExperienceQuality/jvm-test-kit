@@ -400,7 +400,7 @@ class ServiceConventionsPluginTest {
 
         BuildResult result = GradleRunner.create()
                 .withProjectDir(projectDirectory.toFile())
-                .withGradleVersion("8.14.5")
+                .withGradleVersion(System.getProperty("xq.plugin.consumerGradleVersion"))
                 .withArguments("--stacktrace", "tasks", "--all")
                 .build();
 
@@ -490,7 +490,7 @@ class ServiceConventionsPluginTest {
         System.arraycopy(arguments, 0, fullArguments, 1, arguments.length);
         return GradleRunner.create()
                 .withProjectDir(projectDirectory.toFile())
-                .withGradleVersion("8.14.5")
+                .withGradleVersion(System.getProperty("xq.plugin.consumerGradleVersion"))
                 .withPluginClasspath()
                 .withArguments(fullArguments);
     }
