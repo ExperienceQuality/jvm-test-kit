@@ -197,5 +197,5 @@ Spring object factory.
 ```
 
 `check` includes tests and binary compatibility against the configured
-released baseline. The root build retains legacy library task aliases, but new
-automation should use the explicit `:test-kit:` task path.
+released baseline. Automation uses the explicit `:test-kit:` task path; reports
+are written under `modules/test-kit/build/`.

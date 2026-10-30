@@ -70,7 +70,7 @@ jobs:
           VERSION: ${{ inputs.version }}
         run: |
           ./gradlew --no-daemon :test-kit:check -PreleaseVersion="$VERSION"
-          test -s build/reports/japicmp/report.txt
+          test -s modules/test-kit/build/reports/japicmp/report.txt
           ./gradlew --no-daemon :spring-consumer:check
       - name: Test plugin against staged marker and implementation
         if: ${{ inputs.product == 'all' || inputs.product == 'plugin' }}
@@ -85,7 +85,7 @@ jobs:
         run: |
           mkdir -p .ci-evidence/test-results
           for entry in \
-            'build/test-results:.ci-evidence/test-results/library' \
+            'modules/test-kit/build/test-results:.ci-evidence/test-results/library' \
             'modules/service-plugin/build/test-results:.ci-evidence/test-results/plugin' \
             'fixtures/spring-consumer/build/test-results:.ci-evidence/test-results/consumer-spring'; do
             source="${entry%%:*}"
@@ -101,6 +101,6 @@ jobs:
           name: ${{ steps.metadata.outputs.evidence_name }}
           path: |
             .ci-evidence
-            build/reports/japicmp
+            modules/test-kit/build/reports/japicmp
           if-no-files-found: error
           retention-days: 30

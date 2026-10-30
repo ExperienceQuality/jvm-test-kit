@@ -11,13 +11,14 @@ contract.
 | --- | --- | --- |
 | `modules/test-kit` | `com.xq:jvm-test-kit`, Jupiter and Cucumber scenario lifecycle, REST client values and assertions, Spring Cucumber integration, compatibility report, SBOM | Service process startup, service builds, infrastructure |
 | `modules/service-plugin` | Plugin ID and marker, `jvmTestKitService` DSL, Java/Spring conventions, Cucumber/Jupiter E2E tasks, packaging and owned-process tasks | Test-kit public Java API, databases, containers, deployment |
-| Root build | Module inclusion, aggregate `clean`/`assemble`/`check`, `verifyAll`, legacy library task facade | Product source or independent version selection |
+| Root build | Module inclusion, aggregate `clean`/`assemble`/`check`, `verifyAll` | Product source or independent version selection |
 | `:spring-consumer` | In-repository Spring Cucumber consumer verification | Published production code |
 | `ci` and `.github/workflows` | Immutable staging, evidence, promotion, release routing | Product behavior |
 
-New code belongs in the module that owns its public contract. The root facade
-exists for compatibility with earlier library automation; new scripts should
-prefer explicit `:test-kit:` or `:service-plugin:` task paths.
+New code belongs in the module that owns its public contract. Each module
+writes to its own `build/` directory. Scripts use explicit `:test-kit:`,
+`:service-plugin:`, or `:spring-consumer:` task paths; the root project has no
+library task aliases.
 
 ## Public boundaries
 
