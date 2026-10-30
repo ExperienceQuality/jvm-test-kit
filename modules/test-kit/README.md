@@ -190,9 +190,9 @@ Spring object factory.
 ## Verify and stage
 
 ```bash
-./gradlew --no-daemon :test-kit:check -PreleaseVersion=2.0.0-test
+./gradlew --no-daemon :test-kit:check -PreleaseVersion=3.0.0-test
 ./gradlew --no-daemon :test-kit:publishMavenJavaPublicationToTestRepository \
-  -PreleaseVersion=2.0.0-test -PtestRepository=/tmp/jvm-test-kit-repository
+  -PreleaseVersion=3.0.0-test -PtestRepository=/tmp/jvm-test-kit-repository
 ./gradlew --no-daemon :spring-consumer:check
 ```
 

@@ -17,7 +17,7 @@ base {
 
 tasks.register('verifyReleaseVersion', com.xq.jvmtestkit.conventions.VerifyReleaseVersion) {
     versionProperty = 'releaseVersion'
-    exampleVersion = '2.0.0'
+    exampleVersion = '3.0.3'
     candidate = project.version.toString()
 }
 
@@ -98,10 +98,12 @@ tasks.register('japicmp', me.champeau.gradle.japicmp.JapicmpTask) {
     onlyModified = false
     onlyBinaryIncompatibleModified = true
     reportOnlySummary = true
+    def baselineMajor = libs.versions.jvm.test.kit.baseline.get().tokenize('.')[0].toInteger()
     def major = project.version.toString().tokenize('.')[0].toInteger()
-    // v3 intentionally breaks the v2 public API. CI uses 0.0.0-ci.* staging
-    // versions, so gate only v2 releases instead of treating CI as v2.
-    failOnModification = major == 2
+    // Releases on the baseline's major line must stay binary compatible. CI
+    // builds 0.0.0-ci.* versions of that same line, so gate them too. A new
+    // major version is not gated until the baseline moves to its first release.
+    failOnModification = major == baselineMajor || major == 0
     ignoreMissingClasses = true
     txtOutputFile = layout.buildDirectory.file('reports/japicmp/report.txt')
     newArchives.from(tasks.named('jar'))

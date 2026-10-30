@@ -35,7 +35,7 @@ For a direct fixture dependency, add the library and Spring integration
 dependencies explicitly:
 
 ```groovy
-testImplementation 'com.xq:jvm-test-kit:3.0.0'
+testImplementation 'com.xq:jvm-test-kit:3.0.3'
 testImplementation 'io.cucumber:cucumber-spring'
 testImplementation platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
 testImplementation 'org.springframework.boot:spring-boot-test'
