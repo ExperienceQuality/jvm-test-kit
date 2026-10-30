@@ -15,8 +15,6 @@ base {
     archivesName = 'jvm-test-kit'
 }
 
-layout.buildDirectory.set(rootProject.layout.buildDirectory)
-
 tasks.register('verifyReleaseVersion', com.xq.jvmtestkit.conventions.VerifyReleaseVersion) {
     versionProperty = 'releaseVersion'
     exampleVersion = '2.0.0'

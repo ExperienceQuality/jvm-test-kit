@@ -29,7 +29,7 @@ if [[ "$product" == "all" || "$product" == "library" ]]; then
     -PreleaseVersion="$version" \
     -PtestRepository="$repository"
   mkdir -p "$staging_root/evidence/library"
-  cp build/reports/bom/bom.json "$staging_root/evidence/library/jvm-test-kit-$version.cdx.json"
+  cp modules/test-kit/build/reports/bom/bom.json "$staging_root/evidence/library/jvm-test-kit-$version.cdx.json"
 fi
 
 if [[ "$product" == "all" || "$product" == "plugin" ]]; then

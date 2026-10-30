@@ -4,9 +4,8 @@
 
 This repository publishes the JVM Test Kit library and a service Gradle plugin
 for JVM services. The library includes its Cucumber, REST, and optional Spring
-test integrations. The root Gradle build aggregates the products and preserves
-the legacy JVM Test Kit task names; product code and publication ownership live
-in the module directories.
+test integrations. The root Gradle build aggregates the products; product code,
+build outputs, and publication ownership live in the module directories.
 
 | Product | Source | Public identity | Version input | Release tag |
 | --- | --- | --- | --- | --- |
@@ -24,7 +23,7 @@ product they use.
 - [Service Gradle Plugin module](modules/service-plugin/README.md): consumer
   configuration, DSL, tasks, and lifecycle safety.
 - [Architecture](docs/architecture.md): module ownership, public boundaries,
-  root compatibility facade, and runtime flow.
+  root aggregation, and runtime flow.
 - [Library API](docs/api.md): detailed JVM Test Kit behavior.
 - [Consumer guide](docs/consumer-guide.md): dependencies, Cucumber setup,
   response tables, and optional Spring integration.
