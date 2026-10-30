@@ -12,9 +12,9 @@ wiremock = "3.13.2"
 json-unit = "4.1.0"
 aeonbits-owner = "1.0.12"
 # Released library the japicmp binary compatibility check compares against.
-jvm-test-kit-baseline = "2.0.0"
+jvm-test-kit-baseline = "3.0.3"
 # Library version the service plugin adds to consumer E2E source sets by default.
-jvm-test-kit-plugin-default = "3.0.0"
+jvm-test-kit-plugin-default = "3.0.3"
 
 [libraries]
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }

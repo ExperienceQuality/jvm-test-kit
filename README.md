@@ -55,7 +55,7 @@ Run the complete repository gate:
 Run one product independently:
 
 ```bash
-./gradlew --no-daemon :test-kit:check -PreleaseVersion=2.0.0-test
+./gradlew --no-daemon :test-kit:check -PreleaseVersion=3.0.0-test
 ./gradlew --no-daemon :service-plugin:test :service-plugin:validatePlugins \
   -PpluginVersion=0.1.0-test
 ```
@@ -65,7 +65,7 @@ Development publications must use an isolated repository, never a committed
 
 ```bash
 ./gradlew --no-daemon :test-kit:publishMavenJavaPublicationToTestRepository \
-  -PreleaseVersion=2.0.0-test -PtestRepository=/tmp/jvm-test-kit-repository
+  -PreleaseVersion=3.0.0-test -PtestRepository=/tmp/jvm-test-kit-repository
 ./gradlew --no-daemon :service-plugin:publishAllPublicationsToTestRepository \
   -PpluginVersion=0.1.0-test -PtestRepository=/tmp/jvm-test-kit-repository
 ```
