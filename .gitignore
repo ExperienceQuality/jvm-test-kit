@@ -5,3 +5,6 @@ fixtures/clean-consumer/.gradle/
 fixtures/clean-consumer/build/
 .idea/
 *.iml
+
+# XQ Squad runtime worktrees
+.squad/worktrees/
