@@ -23,7 +23,7 @@ with `git push --force-with-lease`. Never use a plain force push. If the pull
 request reports merge conflicts, perform this same rebase workflow before
 requesting review or declaring the work complete.
 
-<!-- XQ_SQUAD_MANAGED_START version:v2.0.0 -->
+<!-- XQ_SQUAD_MANAGED_START version:v2.1.0 -->
 *Managed by `ExperienceQuality/xq-squad`. Updates modify only this section.*
 
 # XQ Squad
