@@ -24,7 +24,8 @@ concurrency:
 
 jobs:
   route:
-    runs-on: ubuntu-latest
+    # Pin until japicmp JAXB classpath resolves cleanly on ubuntu-26.04 / ubuntu-latest.
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     outputs:
@@ -114,7 +115,8 @@ jobs:
   deploy:
     if: ${{ needs.route.outputs.release == 'true' }}
     needs: [route, build, test, publish]
-    runs-on: ubuntu-latest
+    # Pin until japicmp JAXB classpath resolves cleanly on ubuntu-26.04 / ubuntu-latest.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       actions: read
